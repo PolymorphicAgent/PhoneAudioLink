@@ -8,5 +8,9 @@
         <file>Iconparts/play-512.png</file>
         <file>Iconparts/pause-512-white.png</file>
         <file>Iconparts/play-512-white.png</file>
+        <file>Iconparts/back-512.png</file>
+        <file>Iconparts/forward-512.png</file>
+        <file>Iconparts/back-512-white.png</file>
+        <file>Iconparts/forward-512-white.png</file>
     </qresource>
 </RCC>

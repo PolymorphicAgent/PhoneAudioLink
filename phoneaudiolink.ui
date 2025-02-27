@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>451</width>
-    <height>378</height>
+    <width>444</width>
+    <height>316</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -188,32 +188,113 @@
      </property>
     </widget>
    </widget>
-   <widget class="AnimatedButton" name="playPause">
+   <widget class="QFrame" name="frame_3">
     <property name="geometry">
      <rect>
-      <x>200</x>
-      <y>230</y>
-      <width>31</width>
+      <x>70</x>
+      <y>190</y>
+      <width>311</width>
+      <height>71</height>
+     </rect>
+    </property>
+    <property name="frameShape">
+     <enum>QFrame::Shape::WinPanel</enum>
+    </property>
+    <property name="frameShadow">
+     <enum>QFrame::Shadow::Sunken</enum>
+    </property>
+    <widget class="AnimatedButton" name="playPause">
+     <property name="geometry">
+      <rect>
+       <x>140</x>
+       <y>20</y>
+       <width>31</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+     <property name="flat">
+      <bool>true</bool>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="forward">
+     <property name="geometry">
+      <rect>
+       <x>220</x>
+       <y>20</y>
+       <width>31</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+     <property name="flat">
+      <bool>true</bool>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="back">
+     <property name="geometry">
+      <rect>
+       <x>60</x>
+       <y>20</y>
+       <width>31</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+     <property name="flat">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </widget>
+   <widget class="QLabel" name="label_3">
+    <property name="geometry">
+     <rect>
+      <x>50</x>
+      <y>140</y>
+      <width>351</width>
       <height>31</height>
      </rect>
     </property>
+    <property name="font">
+     <font>
+      <family>Terminal</family>
+      <bold>true</bold>
+      <underline>true</underline>
+     </font>
+    </property>
+    <property name="frameShape">
+     <enum>QFrame::Shape::WinPanel</enum>
+    </property>
+    <property name="frameShadow">
+     <enum>QFrame::Shadow::Sunken</enum>
+    </property>
     <property name="text">
-     <string/>
+     <string>Controls</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignmentFlag::AlignCenter</set>
     </property>
    </widget>
+   <zorder>frame_3</zorder>
    <zorder>frame_2</zorder>
    <zorder>frame</zorder>
    <zorder>label</zorder>
    <zorder>connect</zorder>
    <zorder>label_2</zorder>
-   <zorder>playPause</zorder>
+   <zorder>label_3</zorder>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>451</width>
+     <width>444</width>
      <height>17</height>
     </rect>
    </property>

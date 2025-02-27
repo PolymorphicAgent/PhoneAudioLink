@@ -24,7 +24,15 @@ void AnimatedButton::setProgress(qreal p) {
 void AnimatedButton::paintEvent(QPaintEvent *event) {
     Q_UNUSED(event);
     QPainter painter(this);
-    QRect iconRect = rect(); // Adjust as needed for your layout
+
+    //set up a style option and let Qt draw the button background (with hover highlight)
+    QStyleOptionButton opt;
+    initStyleOption(&opt);
+
+    if (m_hovered) opt.state |= QStyle::State_MouseOver;
+    style()->drawControl(QStyle::CE_PushButton, &opt, &painter, this);
+
+    QRect iconRect = rect().adjusted(5, 5, -5, -5);
 
     // Draw play icon (fades out)
     painter.setOpacity(1 - m_progress);
@@ -47,4 +55,16 @@ void AnimatedButton::toggleState() {
         anim->setEndValue(0.0);
     }
     anim->start(QAbstractAnimation::DeleteWhenStopped);
+}
+
+void AnimatedButton::enterEvent(QEnterEvent *event) {
+    m_hovered = true;
+    update();
+    QPushButton::enterEvent(event);
+}
+
+void AnimatedButton::leaveEvent(QEvent *event) {
+    m_hovered = false;
+    update();
+    QPushButton::leaveEvent(event);
 }
