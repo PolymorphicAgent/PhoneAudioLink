@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>PhoneAudioLink</class>
+ <widget class="QMainWindow" name="PhoneAudioLink">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>473</width>
+    <height>378</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>PhoneAudioLink</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QListWidget" name="listWidget">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>50</y>
+      <width>241</width>
+      <height>261</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label">
+    <property name="geometry">
+     <rect>
+      <x>18</x>
+      <y>10</y>
+      <width>221</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Terminal</family>
+      <bold>true</bold>
+      <underline>true</underline>
+     </font>
+    </property>
+    <property name="frameShape">
+     <enum>QFrame::Shape::WinPanel</enum>
+    </property>
+    <property name="frameShadow">
+     <enum>QFrame::Shadow::Sunken</enum>
+    </property>
+    <property name="text">
+     <string>Available Devices</string>
+    </property>
+    <property name="textFormat">
+     <enum>Qt::TextFormat::RichText</enum>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignmentFlag::AlignCenter</set>
+    </property>
+    <property name="textInteractionFlags">
+     <set>Qt::TextInteractionFlag::LinksAccessibleByMouse|Qt::TextInteractionFlag::TextSelectableByMouse</set>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>473</width>
+     <height>17</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Terminal</family>
+    </font>
+   </property>
+   <widget class="QMenu" name="menuStartup">
+    <property name="font">
+     <font>
+      <family>Terminal</family>
+     </font>
+    </property>
+    <property name="autoFillBackground">
+     <bool>false</bool>
+    </property>
+    <property name="title">
+     <string>&amp;Startup</string>
+    </property>
+    <addaction name="actionStart_Program_Minimized"/>
+    <addaction name="action_Connect_Automatically_on_Program_Start"/>
+    <addaction name="actionStart_Program_on_Login"/>
+    <addaction name="separator"/>
+    <addaction name="actionProgram_Version"/>
+   </widget>
+   <addaction name="menuStartup"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <action name="actionStart_Program_Minimized">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Start Program &amp;Minimized</string>
+   </property>
+   <property name="font">
+    <font>
+     <family>Terminal</family>
+    </font>
+   </property>
+  </action>
+  <action name="actionStart_Program_on_Login">
+   <property name="checkable">
+    <bool>false</bool>
+   </property>
+   <property name="icon">
+    <iconset theme="QIcon::ThemeIcon::DialogInformation"/>
+   </property>
+   <property name="text">
+    <string>Start Program on &amp;Login</string>
+   </property>
+   <property name="font">
+    <font>
+     <family>Terminal</family>
+    </font>
+   </property>
+  </action>
+  <action name="action_Connect_Automatically_on_Program_Start">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>&amp;Connect Automatically on Program Start</string>
+   </property>
+   <property name="font">
+    <font>
+     <family>Terminal</family>
+    </font>
+   </property>
+  </action>
+  <action name="actionProgram_Version">
+   <property name="icon">
+    <iconset theme="QIcon::ThemeIcon::DialogInformation"/>
+   </property>
+   <property name="text">
+    <string>Program &amp;Version</string>
+   </property>
+   <property name="font">
+    <font>
+     <family>Terminal</family>
+    </font>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
