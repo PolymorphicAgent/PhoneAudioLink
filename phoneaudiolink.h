@@ -17,6 +17,9 @@ public:
     PhoneAudioLink(QWidget *parent = nullptr);
     ~PhoneAudioLink();
 
+private slots:
+    void playPause();
+
 private:
     Ui::PhoneAudioLink *ui;
 };

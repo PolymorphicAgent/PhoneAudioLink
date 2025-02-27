@@ -12,10 +12,12 @@ RC_ICONS = icon.ico
 
 
 SOURCES += \
+    animatedbutton.cpp \
     main.cpp \
     phoneaudiolink.cpp
 
 HEADERS += \
+    animatedbutton.h \
     phoneaudiolink.h
 
 FORMS += \

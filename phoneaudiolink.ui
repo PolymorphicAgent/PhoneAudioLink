@@ -49,7 +49,7 @@
      <set>Qt::TextInteractionFlag::LinksAccessibleByMouse|Qt::TextInteractionFlag::TextSelectableByMouse</set>
     </property>
    </widget>
-   <widget class="QPushButton" name="pushButton">
+   <widget class="QPushButton" name="connect">
     <property name="geometry">
      <rect>
       <x>300</x>
@@ -115,7 +115,7 @@
     <property name="frameShadow">
      <enum>QFrame::Shadow::Sunken</enum>
     </property>
-    <widget class="QPushButton" name="pushButton_2">
+    <widget class="QPushButton" name="disconnect">
      <property name="geometry">
       <rect>
        <x>10</x>
@@ -149,7 +149,7 @@
     <property name="frameShadow">
      <enum>QFrame::Shadow::Sunken</enum>
     </property>
-    <widget class="QComboBox" name="comboBox">
+    <widget class="QComboBox" name="deviceComboBox">
      <property name="geometry">
       <rect>
        <x>10</x>
@@ -159,7 +159,7 @@
       </rect>
      </property>
     </widget>
-    <widget class="QLabel" name="label_3">
+    <widget class="QLabel" name="dcLabel">
      <property name="geometry">
       <rect>
        <x>20</x>
@@ -188,11 +188,25 @@
      </property>
     </widget>
    </widget>
+   <widget class="AnimatedButton" name="playPause">
+    <property name="geometry">
+     <rect>
+      <x>200</x>
+      <y>230</y>
+      <width>31</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+   </widget>
    <zorder>frame_2</zorder>
    <zorder>frame</zorder>
    <zorder>label</zorder>
-   <zorder>pushButton</zorder>
+   <zorder>connect</zorder>
    <zorder>label_2</zorder>
+   <zorder>playPause</zorder>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
@@ -285,6 +299,13 @@
    </property>
   </action>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>AnimatedButton</class>
+   <extends>QPushButton</extends>
+   <header location="global">animatedbutton.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>
