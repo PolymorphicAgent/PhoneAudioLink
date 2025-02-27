@@ -6,6 +6,7 @@ PhoneAudioLink::PhoneAudioLink(QWidget *parent)
     , ui(new Ui::PhoneAudioLink)
 {
     ui->setupUi(this);
+    ui->label_3->setStyleSheet("QLabel { color : red; }");
 }
 
 PhoneAudioLink::~PhoneAudioLink()
