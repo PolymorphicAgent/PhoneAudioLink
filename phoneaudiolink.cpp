@@ -10,6 +10,7 @@ PhoneAudioLink::PhoneAudioLink(QWidget *parent)
 
     ui->setupUi(this);
     ui->dcLabel->setStyleSheet("QLabel { color : red; }");
+    ui->menuAdvanced->setToolTipsVisible(true);
 
     if(QGuiApplication::styleHints()->colorScheme() == Qt::ColorScheme::Light) {
         ui->forward->setIcon(QPixmap(":/icons/Iconparts/forward-512.png"));
@@ -47,17 +48,19 @@ void PhoneAudioLink::startDiscovery() {
 }
 
 void PhoneAudioLink::appendDevice(const QBluetoothDeviceInfo &device) {
-    // Filter: only add devices that advertise the Audio Sink service
+    //filter devices
+    if(device.name().startsWith("Bluetooth") && device.name().contains(":")) {
+        return;
+    }
     qDebug()<<"discovered device";
     qDebug()<<"\tName: "               <<device.name();
     qDebug()<<"\tMajor Device Class: " <<device.majorDeviceClass();
     qDebug()<<"\tMinor Device Class: " <<device.minorDeviceClass();
-    qDebug()<<"\tCore Configurations: "<<device.coreConfigurations().toInt();
-    if(device.name().startsWith("Bluetooth")&&device.name().contains(":")) {
-        qDebug()<<"FILTERED OUT";
-        return;
+    // qDebug()<<"\tUuid: "<<device.serviceUuids();
+    if(device.majorDeviceClass() == QBluetoothDeviceInfo::PhoneDevice){
+        ui->deviceComboBox->addItem(device.name(), QVariant::fromValue(device));
+        qDebug()<<"added!";
     }
-    ui->deviceComboBox->addItem(device.name(), QVariant::fromValue(device));
 }
 
 void PhoneAudioLink::connectSelectedDevice() {

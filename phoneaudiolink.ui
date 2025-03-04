@@ -340,7 +340,14 @@
     <addaction name="separator"/>
     <addaction name="actionProgram_Version"/>
    </widget>
+   <widget class="QMenu" name="menuAdvanced">
+    <property name="title">
+     <string>&amp;Advanced</string>
+    </property>
+    <addaction name="compatAction"/>
+   </widget>
    <addaction name="menuStartup"/>
+   <addaction name="menuAdvanced"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionStart_Program_Minimized">
@@ -396,6 +403,17 @@
     <font>
      <family>Terminal</family>
     </font>
+   </property>
+  </action>
+  <action name="compatAction">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>&amp;Mazimize Bluetooth Compatability</string>
+   </property>
+   <property name="toolTip">
+    <string>Enable if your device isn't showing up.</string>
    </property>
   </action>
  </widget>
