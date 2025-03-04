@@ -48,16 +48,15 @@ void PhoneAudioLink::startDiscovery() {
 
 void PhoneAudioLink::appendDevice(const QBluetoothDeviceInfo &device) {
     // Filter: only add devices that advertise the Audio Sink service
-    // if (!(device.majorDeviceClass() == QBluetoothDeviceInfo::AudioVideoDevice)/*!device.serviceUuids().contains(QBluetoothUuid(QStringLiteral("0000110B-0000-1000-8000-00805F9B34FB")))*/) {
-        qDebug()<<"filtered out device";
-        qDebug()<<"\tName: "               <<device.name();
-        qDebug()<<"\tMajor Device Class: " <<device.majorDeviceClass();
-        qDebug()<<"\tMinor Device Class: " <<device.minorDeviceClass();
-        // qDebug()<<"\tManufacturer Data: "  <<device.manufacturerData().values().toList();
-        // qDebug()<<"\tManufacturer Ids: "   <<device.manufacturerIds().toVector();
-        qDebug()<<"\tCore Configurations: "<<device.coreConfigurations().toInt();
-        //return;
-    // }
+    qDebug()<<"discovered device";
+    qDebug()<<"\tName: "               <<device.name();
+    qDebug()<<"\tMajor Device Class: " <<device.majorDeviceClass();
+    qDebug()<<"\tMinor Device Class: " <<device.minorDeviceClass();
+    qDebug()<<"\tCore Configurations: "<<device.coreConfigurations().toInt();
+    if(device.name().startsWith("Bluetooth")&&device.name().contains(":")) {
+        qDebug()<<"FILTERED OUT";
+        return;
+    }
     ui->deviceComboBox->addItem(device.name(), QVariant::fromValue(device));
 }
 

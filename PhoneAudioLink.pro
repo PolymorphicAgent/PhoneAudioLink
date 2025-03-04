@@ -13,13 +13,11 @@ RC_ICONS = icon.ico
 
 SOURCES += \
     animatedbutton.cpp \
-    devicepickercontroller.cpp \
     main.cpp \
     phoneaudiolink.cpp
 
 HEADERS += \
     animatedbutton.h \
-    devicepickercontroller.h \
     phoneaudiolink.h
 
 FORMS += \
