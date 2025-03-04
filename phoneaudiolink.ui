@@ -164,7 +164,7 @@
       <rect>
        <x>20</x>
        <y>40</y>
-       <width>181</width>
+       <width>151</width>
        <height>21</height>
       </rect>
      </property>
@@ -184,7 +184,26 @@
       <set>Qt::AlignmentFlag::AlignCenter</set>
      </property>
      <property name="textInteractionFlags">
-      <set>Qt::TextInteractionFlag::LinksAccessibleByMouse|Qt::TextInteractionFlag::TextSelectableByKeyboard|Qt::TextInteractionFlag::TextSelectableByMouse</set>
+      <set>Qt::TextInteractionFlag::LinksAccessibleByMouse|Qt::TextInteractionFlag::TextSelectableByMouse</set>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="refresh">
+     <property name="geometry">
+      <rect>
+       <x>170</x>
+       <y>40</y>
+       <width>21</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+     <property name="icon">
+      <iconset theme="QIcon::ThemeIcon::SyncSynchronizing"/>
+     </property>
+     <property name="flat">
+      <bool>true</bool>
      </property>
     </widget>
    </widget>

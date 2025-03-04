@@ -5,6 +5,9 @@ PhoneAudioLink::PhoneAudioLink(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::PhoneAudioLink)
 {
+
+    audioSinkUuid = new QBluetoothUuid(QStringLiteral("0000110B-0000-1000-8000-00805F9B34FB"));
+
     ui->setupUi(this);
     ui->dcLabel->setStyleSheet("QLabel { color : red; }");
 
@@ -17,16 +20,58 @@ PhoneAudioLink::PhoneAudioLink(QWidget *parent)
         ui->back->setIcon(QPixmap(":/icons/Iconparts/back-512-white.png"));
     }
 
-    connect(ui->playPause, SIGNAL(pressed()), this, SLOT(playPause()));
+
+    connect(ui->playPause, SIGNAL(pressed()), this, SLOT(     playPause()));
+    connect(ui->refresh  , SIGNAL(pressed()), this, SLOT(startDiscovery()));
+
+    discoveryAgent = new QBluetoothDeviceDiscoveryAgent(this);
+    connect(discoveryAgent, &QBluetoothDeviceDiscoveryAgent::deviceDiscovered,
+            this, &PhoneAudioLink::appendDevice);
+
+    startDiscovery(); //automatically look for devices
 }
 
-PhoneAudioLink::~PhoneAudioLink()
-{
+PhoneAudioLink::~PhoneAudioLink() {
     delete ui;
+    delete discoveryAgent;
 }
 
-void PhoneAudioLink::playPause()
-{
+void PhoneAudioLink::playPause() {
     ui->playPause->toggleState();
+}
+
+void PhoneAudioLink::startDiscovery() {
+    ui->deviceComboBox->clear();
+    discoveryAgent->stop();
+    discoveryAgent->start();
+}
+
+void PhoneAudioLink::appendDevice(const QBluetoothDeviceInfo &device) {
+    // Filter: only add devices that advertise the Audio Sink service
+    // if (!(device.majorDeviceClass() == QBluetoothDeviceInfo::AudioVideoDevice)/*!device.serviceUuids().contains(QBluetoothUuid(QStringLiteral("0000110B-0000-1000-8000-00805F9B34FB")))*/) {
+        qDebug()<<"filtered out device";
+        qDebug()<<"\tName: "               <<device.name();
+        qDebug()<<"\tMajor Device Class: " <<device.majorDeviceClass();
+        qDebug()<<"\tMinor Device Class: " <<device.minorDeviceClass();
+        // qDebug()<<"\tManufacturer Data: "  <<device.manufacturerData().values().toList();
+        // qDebug()<<"\tManufacturer Ids: "   <<device.manufacturerIds().toVector();
+        qDebug()<<"\tCore Configurations: "<<device.coreConfigurations().toInt();
+        //return;
+    // }
+    ui->deviceComboBox->addItem(device.name(), QVariant::fromValue(device));
+}
+
+void PhoneAudioLink::connectSelectedDevice() {
+    //get the device info from the ComboBox
+    auto device = ui->deviceComboBox->currentData().value<QBluetoothDeviceInfo>();
+    QBluetoothLocalDevice localDevice;
+    //pair if not already paired.
+    if (localDevice.hostMode() != QBluetoothLocalDevice::HostConnectable) {
+        localDevice.powerOn();
+    }
+    if (localDevice.pairingStatus(device.address()) != QBluetoothLocalDevice::Paired) {
+        localDevice.requestPairing(device.address(), QBluetoothLocalDevice::Paired);
+    }
+    // Once paired, the OS should handle A2DP routing.
 }
 
