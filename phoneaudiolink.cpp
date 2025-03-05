@@ -21,6 +21,15 @@ PhoneAudioLink::PhoneAudioLink(QWidget *parent)
     discoveryAgent = new QBluetoothDeviceDiscoveryAgent(this);
     connect(discoveryAgent, &QBluetoothDeviceDiscoveryAgent::deviceDiscovered,
             this, &PhoneAudioLink::appendDevice);
+    connect(discoveryAgent, &QBluetoothDeviceDiscoveryAgent::errorOccurred,
+            this, [this](QBluetoothDeviceDiscoveryAgent::Error e){
+        qDebug()<<e;
+        if(e == QBluetoothDeviceDiscoveryAgent::NoError) return;
+        else if(e == 2)
+            QMessageBox::critical(this, tr("Bluetooth Error"), tr("PoweredOffError: Make sure that bluetooth is turned on."));
+        else
+            QMessageBox::critical(this, tr("Bluetooth Error"), tr("Unknown: Open a bug report with this info: %1").arg(e));
+    });
 
     startDiscovery(); //automatically look for devices
 
@@ -135,22 +144,22 @@ void PhoneAudioLink::appendDevice(const QBluetoothDeviceInfo &device) {
     if(device.name().startsWith("Bluetooth") && device.name().contains(":")) {
         return;
     }
-    qDebug()<<"discovered device";
-    qDebug()<<"\tName: "               <<device.name();
-    qDebug()<<"\tMajor, Minor Device Classes: " <<device.majorDeviceClass()<<device.minorDeviceClass();
-    qDebug()<<"\tDevice address: "<<device.address();
+    // qDebug()<<"discovered device";
+    // qDebug()<<"\tName: "               <<device.name();
+    // qDebug()<<"\tMajor, Minor Device Classes: " <<device.majorDeviceClass()<<device.minorDeviceClass();
+    // qDebug()<<"\tDevice address: "<<device.address();
 
     if(device.address() == savedDeviceAddress){
-        qDebug()<<"Matched!";
+        // qDebug()<<"Matched!";
         ui->deviceComboBox->addItem(device.name(), QVariant::fromValue(device));
         ui->deviceComboBox->setCurrentIndex(ui->deviceComboBox->findData(QVariant::fromValue(device)));
-        qDebug()<<"added!";
+        // qDebug()<<"added!";
         return;
     }
 
     if(device.majorDeviceClass() == QBluetoothDeviceInfo::PhoneDevice){
         ui->deviceComboBox->addItem(device.name(), QVariant::fromValue(device));
-        qDebug()<<"added!";
+        // qDebug()<<"added!";
     }
 }
 
