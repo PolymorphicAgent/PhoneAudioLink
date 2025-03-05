@@ -5,7 +5,13 @@
 
 #include <QBluetoothDeviceDiscoveryAgent>
 #include <QBluetoothLocalDevice>
+#include <QSystemTrayIcon>
+#include <QJsonDocument>
+#include <QMessageBox>
 #include <QMainWindow>
+#include <QJsonObject>
+#include <QJsonArray>
+#include <QFile>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -21,17 +27,31 @@ public:
     PhoneAudioLink(QWidget *parent = nullptr);
     ~PhoneAudioLink();
 
+protected:
+    void closeEvent(QCloseEvent *event) override; //triggers when the app is closed
+    void changeEvent(QEvent *event) override; //triggers when the app is minimized
+
 private slots:
     void playPause();
     void startDiscovery();
     void appendDevice(const QBluetoothDeviceInfo &);
     void connectSelectedDevice();
 
+    void saveInitData();
+    void loadInitData();
+    void showFromTray();
+    void exitApp();
+
 private:
     StartupHelp *startupHelp;
     Ui::PhoneAudioLink *ui;
     QBluetoothDeviceDiscoveryAgent *discoveryAgent;
-    bool maximizeBluetoothCompatability;
+    QBluetoothAddress savedDeviceAddress;
+    QSystemTrayIcon *trayIcon;
+    QMenu *trayMenu;
+    bool maximizeBluetoothCompatability, startMinimized, connectAutomatically;
+
+    QString stringifyUuids(QList<QBluetoothUuid>);
 
 };
 #endif // PHONEAUDIOLINK_H
