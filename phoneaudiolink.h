@@ -1,6 +1,8 @@
 #ifndef PHONEAUDIOLINK_H
 #define PHONEAUDIOLINK_H
 
+#include "startuphelp.h"
+
 #include <QBluetoothDeviceDiscoveryAgent>
 #include <QBluetoothLocalDevice>
 #include <QMainWindow>
@@ -26,9 +28,10 @@ private slots:
     void connectSelectedDevice();
 
 private:
+    StartupHelp *startupHelp;
     Ui::PhoneAudioLink *ui;
     QBluetoothDeviceDiscoveryAgent *discoveryAgent;
-    const QBluetoothUuid *audioSinkUuid;
+    bool maximizeBluetoothCompatability;
 
 };
 #endif // PHONEAUDIOLINK_H

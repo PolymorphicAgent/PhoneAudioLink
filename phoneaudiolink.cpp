@@ -5,9 +5,6 @@ PhoneAudioLink::PhoneAudioLink(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::PhoneAudioLink)
 {
-
-    audioSinkUuid = new QBluetoothUuid(QStringLiteral("0000110B-0000-1000-8000-00805F9B34FB"));
-
     ui->setupUi(this);
     ui->dcLabel->setStyleSheet("QLabel { color : red; }");
     ui->menuAdvanced->setToolTipsVisible(true);
@@ -30,6 +27,16 @@ PhoneAudioLink::PhoneAudioLink(QWidget *parent)
             this, &PhoneAudioLink::appendDevice);
 
     startDiscovery(); //automatically look for devices
+
+    connect(ui->compatAction, &QAction::triggered, this, [this](bool checked){
+        maximizeBluetoothCompatability=checked;
+    });
+
+    startupHelp = new StartupHelp(this);
+
+    connect(ui->startOnLoginAction, &QAction::triggered, this, [this](){
+        this->startupHelp->exec();
+    });
 }
 
 PhoneAudioLink::~PhoneAudioLink() {

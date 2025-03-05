@@ -334,11 +334,11 @@
     <property name="title">
      <string>&amp;Startup</string>
     </property>
-    <addaction name="actionStart_Program_Minimized"/>
-    <addaction name="action_Connect_Automatically_on_Program_Start"/>
-    <addaction name="actionStart_Program_on_Login"/>
+    <addaction name="startMinimizedAction"/>
+    <addaction name="connectStartupAction"/>
+    <addaction name="startOnLoginAction"/>
     <addaction name="separator"/>
-    <addaction name="actionProgram_Version"/>
+    <addaction name="versionAction"/>
    </widget>
    <widget class="QMenu" name="menuAdvanced">
     <property name="title">
@@ -350,7 +350,7 @@
    <addaction name="menuAdvanced"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
-  <action name="actionStart_Program_Minimized">
+  <action name="startMinimizedAction">
    <property name="checkable">
     <bool>true</bool>
    </property>
@@ -363,7 +363,7 @@
     </font>
    </property>
   </action>
-  <action name="actionStart_Program_on_Login">
+  <action name="startOnLoginAction">
    <property name="checkable">
     <bool>false</bool>
    </property>
@@ -379,7 +379,7 @@
     </font>
    </property>
   </action>
-  <action name="action_Connect_Automatically_on_Program_Start">
+  <action name="connectStartupAction">
    <property name="checkable">
     <bool>true</bool>
    </property>
@@ -392,7 +392,7 @@
     </font>
    </property>
   </action>
-  <action name="actionProgram_Version">
+  <action name="versionAction">
    <property name="icon">
     <iconset theme="QIcon::ThemeIcon::DialogInformation"/>
    </property>
