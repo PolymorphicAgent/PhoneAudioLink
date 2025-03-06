@@ -18,9 +18,12 @@ PhoneAudioLink::PhoneAudioLink(QWidget *parent)
         ui->back->setIcon(QPixmap(":/icons/Iconparts/back-512-white.png"));
     }
 
+    //create and connect the bluetooth discovery agent
     discoveryAgent = new QBluetoothDeviceDiscoveryAgent(this);
     connect(discoveryAgent, &QBluetoothDeviceDiscoveryAgent::deviceDiscovered,
             this, &PhoneAudioLink::appendDevice);
+
+    //error catching
     connect(discoveryAgent, &QBluetoothDeviceDiscoveryAgent::errorOccurred,
             this, [this](QBluetoothDeviceDiscoveryAgent::Error e){
         qDebug()<<e;
@@ -77,6 +80,7 @@ PhoneAudioLink::PhoneAudioLink(QWidget *parent)
 
     connect(ui->compatAction, &QAction::triggered, this, [this](bool checked){
         maximizeBluetoothCompatability=checked;
+        startDiscovery();//refresh with the new devices
     });
 
     connect(ui->connectStartupAction, &QAction::triggered, this, [this](bool checked){
@@ -145,21 +149,36 @@ void PhoneAudioLink::appendDevice(const QBluetoothDeviceInfo &device) {
         return;
     }
     // qDebug()<<"discovered device";
-    // qDebug()<<"\tName: "               <<device.name();
+    qDebug()<<"\tName: "               <<device.name();
     // qDebug()<<"\tMajor, Minor Device Classes: " <<device.majorDeviceClass()<<device.minorDeviceClass();
     // qDebug()<<"\tDevice address: "<<device.address();
 
-    if(device.address() == savedDeviceAddress){
-        // qDebug()<<"Matched!";
-        ui->deviceComboBox->addItem(device.name(), QVariant::fromValue(device));
-        ui->deviceComboBox->setCurrentIndex(ui->deviceComboBox->findData(QVariant::fromValue(device)));
-        // qDebug()<<"added!";
+    QString tag = "";
+    bool isPhone = device.majorDeviceClass() == QBluetoothDeviceInfo::PhoneDevice;
+    bool isAv = device.majorDeviceClass() == QBluetoothDeviceInfo::AudioVideoDevice;
+
+    if(maximizeBluetoothCompatability){
+        if(isPhone){
+            tag=" [Phone Device]";
+            qDebug()<<"phone: "<<device.majorDeviceClass();
+        }
+        else if(isAv){
+            tag=" [AV Device]";
+            qDebug()<<"av: "<<device.majorDeviceClass();
+        }
+        else{
+            tag=" [UNKNOWN]";
+            qDebug()<<"unknown: "<<device.majorDeviceClass();
+        }
+        ui->deviceComboBox->addItem(device.name()+tag, QVariant::fromValue(device));
+        if(device.address() == savedDeviceAddress)
+            ui->deviceComboBox->setCurrentIndex(ui->deviceComboBox->findData(QVariant::fromValue(device)));
         return;
     }
 
-    if(device.majorDeviceClass() == QBluetoothDeviceInfo::PhoneDevice){
+    if(isPhone){
         ui->deviceComboBox->addItem(device.name(), QVariant::fromValue(device));
-        // qDebug()<<"added!";
+        return;
     }
 }
 
