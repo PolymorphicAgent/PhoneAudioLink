@@ -20,6 +20,6 @@ int main(int argc, char *argv[])
         }
     }
     PhoneAudioLink w;
-    w.show();
+    if(!w.getStartMinimized())w.show();
     return a.exec();
 }

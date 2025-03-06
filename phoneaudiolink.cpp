@@ -119,6 +119,11 @@ PhoneAudioLink::~PhoneAudioLink() {
     delete ui;
 }
 
+//public function that returns if the program should start in a minimized state
+bool PhoneAudioLink::getStartMinimized(){
+    return this->startMinimized;
+}
+
 //detect window minimize event
 void PhoneAudioLink::changeEvent(QEvent *event) {
     if (event->type() == QEvent::WindowStateChange) {

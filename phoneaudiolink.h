@@ -28,6 +28,8 @@ public:
     PhoneAudioLink(QWidget *parent = nullptr);
     ~PhoneAudioLink();
 
+    bool getStartMinimized();
+
 protected:
     void closeEvent(QCloseEvent *event) override; //triggers when the app is closed
     void changeEvent(QEvent *event) override; //triggers when the app is minimized
