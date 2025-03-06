@@ -39,6 +39,11 @@ PhoneAudioLink::PhoneAudioLink(QWidget *parent)
     //load initialization data from "init.json" if it exists
     loadInitData();
 
+    if(maximizeBluetoothCompatability)
+        ui->info->setToolTip("Showing all devices for compatability's sake.\nNot all of these devices are guaranteed to support A2DP.");
+    else
+        ui->info->setToolTip("Filtering for only phone devices.\nUse Advanced->Maximize Bluetooth compatability to show more devices.");
+
     //create a system tray icon
     trayIcon = new QSystemTrayIcon(QIcon(":/icons/icon.ico"), this);
 
@@ -80,7 +85,15 @@ PhoneAudioLink::PhoneAudioLink(QWidget *parent)
 
     connect(ui->compatAction, &QAction::triggered, this, [this](bool checked){
         maximizeBluetoothCompatability=checked;
-        startDiscovery();//refresh with the new devices
+
+        //change the info tooltip
+        if(maximizeBluetoothCompatability)
+            ui->info->setToolTip("Showing all devices for compatability's sake.\nNot all of these devices are guaranteed to support A2DP.");
+        else
+            ui->info->setToolTip("Filtering for only phone devices.\nUse Advanced->Maximize Bluetooth compatability to show more devices.");
+
+        //refresh devices
+        startDiscovery();
     });
 
     connect(ui->connectStartupAction, &QAction::triggered, this, [this](bool checked){
@@ -96,11 +109,14 @@ PhoneAudioLink::PhoneAudioLink(QWidget *parent)
     connect(ui->startOnLoginAction, &QAction::triggered, this, [this](){
         this->startupHelp->exec();
     });
+
+    connect(ui->info, &QPushButton::clicked, this, [this](){
+        QToolTip::showText(this->mapToGlobal(ui->info->pos()), ui->info->toolTip(), this, {}, 10000);
+    });
 }
 
 PhoneAudioLink::~PhoneAudioLink() {
     delete ui;
-    delete discoveryAgent;
 }
 
 //detect window minimize event
@@ -124,6 +140,7 @@ void PhoneAudioLink::showFromTray() {
 void PhoneAudioLink::exitApp() {
     saveInitData();
     trayIcon->hide();//hide the tray icon
+    discoveryAgent->stop();//stop bluetooth discovery
     QApplication::quit();//call the super method
 }
 
@@ -149,7 +166,7 @@ void PhoneAudioLink::appendDevice(const QBluetoothDeviceInfo &device) {
         return;
     }
     // qDebug()<<"discovered device";
-    qDebug()<<"\tName: "               <<device.name();
+    // qDebug()<<"\tName: "               <<device.name();
     // qDebug()<<"\tMajor, Minor Device Classes: " <<device.majorDeviceClass()<<device.minorDeviceClass();
     // qDebug()<<"\tDevice address: "<<device.address();
 
@@ -158,26 +175,27 @@ void PhoneAudioLink::appendDevice(const QBluetoothDeviceInfo &device) {
     bool isAv = device.majorDeviceClass() == QBluetoothDeviceInfo::AudioVideoDevice;
 
     if(maximizeBluetoothCompatability){
-        if(isPhone){
-            tag=" [Phone Device]";
-            qDebug()<<"phone: "<<device.majorDeviceClass();
-        }
-        else if(isAv){
-            tag=" [AV Device]";
-            qDebug()<<"av: "<<device.majorDeviceClass();
-        }
-        else{
-            tag=" [UNKNOWN]";
-            qDebug()<<"unknown: "<<device.majorDeviceClass();
-        }
+        //set tag based off of device type
+        if(isPhone) tag=" [Phone Device]";
+        else if(isAv) tag=" [AV Device]";
+        else tag=" [UNKNOWN]";
+
+        //add the device
         ui->deviceComboBox->addItem(device.name()+tag, QVariant::fromValue(device));
+
+        //if it matches the saved device, set that to the current index
         if(device.address() == savedDeviceAddress)
             ui->deviceComboBox->setCurrentIndex(ui->deviceComboBox->findData(QVariant::fromValue(device)));
         return;
     }
 
     if(isPhone){
+        //add the device
         ui->deviceComboBox->addItem(device.name(), QVariant::fromValue(device));
+
+        //if it matches the saved device, set that to the current index
+        if(device.address() == savedDeviceAddress)
+            ui->deviceComboBox->setCurrentIndex(ui->deviceComboBox->findData(QVariant::fromValue(device)));
         return;
     }
 }

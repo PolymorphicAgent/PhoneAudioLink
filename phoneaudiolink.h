@@ -11,6 +11,7 @@
 #include <QMainWindow>
 #include <QJsonObject>
 #include <QJsonArray>
+#include <QToolTip>
 #include <QFile>
 
 QT_BEGIN_NAMESPACE
