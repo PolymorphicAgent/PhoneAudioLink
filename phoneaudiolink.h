@@ -39,6 +39,7 @@ private slots:
     void startDiscovery();
     void appendDevice(const QBluetoothDeviceInfo &);
     void connectSelectedDevice();
+    void deviceComboChanged(int);
 
     void saveInitData();
     void loadInitData();

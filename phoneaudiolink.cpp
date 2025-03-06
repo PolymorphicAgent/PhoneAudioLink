@@ -113,8 +113,13 @@ PhoneAudioLink::PhoneAudioLink(QWidget *parent)
     connect(ui->info, &QPushButton::clicked, this, [this](){
         QToolTip::showText(this->mapToGlobal(ui->info->pos()), ui->info->toolTip(), this, {}, 10000);
     });
+
+    connect(ui->connect, &QPushButton::pressed, this, &PhoneAudioLink::connectSelectedDevice);
+
+    connect(ui->deviceComboBox, &QComboBox::currentIndexChanged, this, &PhoneAudioLink::deviceComboChanged);
 }
 
+//destructor
 PhoneAudioLink::~PhoneAudioLink() {
     delete ui;
 }
@@ -205,18 +210,30 @@ void PhoneAudioLink::appendDevice(const QBluetoothDeviceInfo &device) {
     }
 }
 
+//connect to the device in the combo box
 void PhoneAudioLink::connectSelectedDevice() {
     //get the device info from the ComboBox
     auto device = ui->deviceComboBox->currentData().value<QBluetoothDeviceInfo>();
     QBluetoothLocalDevice localDevice;
+    qDebug()<<"Device: "<<device.name();
     //pair if not already paired.
     if (localDevice.hostMode() != QBluetoothLocalDevice::HostConnectable) {
         localDevice.powerOn();
+        qDebug()<<"Powered on!";
     }
     if (localDevice.pairingStatus(device.address()) != QBluetoothLocalDevice::Paired) {
         localDevice.requestPairing(device.address(), QBluetoothLocalDevice::Paired);
+        qDebug()<<"requested pairing!";
     }
+    else qDebug()<<"device already paired!";
     // Once paired, the OS should handle A2DP routing.
+}
+
+//triggers when the index of the device combo box is changed
+void PhoneAudioLink::deviceComboChanged(int i){
+    //TODO: implement greying out of buttons, changing color/text of label, etc.
+    Q_UNUSED(i);
+    //qDebug()<<"changed index: "<<i;
 }
 
 //save initialization data
@@ -305,6 +322,7 @@ void PhoneAudioLink::loadInitData(){
         QMessageBox::critical(this, tr("Error: Initialization Configuration File Corrupted"), tr("Try deleting the file \'init.config\' and restarting the program. \nYour Initialization settings will be cleared."));
 }
 
+//for debugging purposes
 QString PhoneAudioLink::stringifyUuids(QList<QBluetoothUuid> l){
     QString result = "";
     for(QBluetoothUuid i:l){

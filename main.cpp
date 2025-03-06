@@ -23,3 +23,5 @@ int main(int argc, char *argv[])
     if(!w.getStartMinimized())w.show();
     return a.exec();
 }
+
+//TODO: implement connect at startup option
