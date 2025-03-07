@@ -117,6 +117,12 @@ PhoneAudioLink::PhoneAudioLink(QWidget *parent)
     connect(ui->connect, &QPushButton::pressed, this, &PhoneAudioLink::connectSelectedDevice);
 
     connect(ui->deviceComboBox, &QComboBox::currentIndexChanged, this, &PhoneAudioLink::deviceComboChanged);
+
+    connect(ui->debug, &QPushButton::pressed, this, [this](){
+        qDebug()<<"name: "<<ui->deviceComboBox->currentData().value<QBluetoothDeviceInfo>().name();
+        QBluetoothLocalDevice localDevice;
+        qDebug()<<"state: "<<localDevice.pairingStatus(ui->deviceComboBox->currentData().value<QBluetoothDeviceInfo>().address());
+    });
 }
 
 //destructor
@@ -221,7 +227,8 @@ void PhoneAudioLink::connectSelectedDevice() {
         localDevice.powerOn();
         qDebug()<<"Powered on!";
     }
-    if (localDevice.pairingStatus(device.address()) != QBluetoothLocalDevice::Paired) {
+    if (!((localDevice.pairingStatus(device.address()) == QBluetoothLocalDevice::Paired)
+        || (localDevice.pairingStatus(device.address()) == QBluetoothLocalDevice::AuthorizedPaired))) {
         localDevice.requestPairing(device.address(), QBluetoothLocalDevice::Paired);
         qDebug()<<"requested pairing!";
     }

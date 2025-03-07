@@ -319,6 +319,19 @@
      <set>Qt::AlignmentFlag::AlignCenter</set>
     </property>
    </widget>
+   <widget class="QPushButton" name="debug">
+    <property name="geometry">
+     <rect>
+      <x>329</x>
+      <y>143</y>
+      <width>91</width>
+      <height>51</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Debug</string>
+    </property>
+   </widget>
    <zorder>frame_3</zorder>
    <zorder>frame_2</zorder>
    <zorder>frame</zorder>
@@ -326,6 +339,7 @@
    <zorder>connect</zorder>
    <zorder>label_2</zorder>
    <zorder>label_3</zorder>
+   <zorder>debug</zorder>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
