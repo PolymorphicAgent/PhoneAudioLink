@@ -42,6 +42,7 @@ private slots:
     void startDiscovery();//starts the automatic discovery of bluetooth devices.
     void appendDevice(const QBluetoothDeviceInfo &);//is connected to the bluetooth discovery agent's deviceDiscovered slot
     void connectSelectedDevice(); //triggers when the "connect" button is pressed
+    void disconnect();
     void deviceComboChanged(int); //triggers when the deviceComboBox's index changes
 
     void saveInitData();//saves the json initialization configuration

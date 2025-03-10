@@ -34,7 +34,7 @@ bool A2DPStreamer::connectToDevice(const QBluetoothDeviceInfo &deviceInfo)
 
     // Initiate connection.
     // (Adjust the service UUID as needed – for example, QBluetoothUuid::AudioSink.)
-    m_socket->connectToService(deviceInfo.address(), deviceInfo.deviceUuid());
+    m_socket->connectToService(deviceInfo.address(), QBluetoothUuid(QBluetoothUuid::ServiceClassUuid::AudioSink));
     return true;
 }
 

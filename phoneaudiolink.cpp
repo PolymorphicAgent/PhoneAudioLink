@@ -4,6 +4,7 @@
 PhoneAudioLink::PhoneAudioLink(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::PhoneAudioLink)
+    , a2dpStreamer(new A2DPStreamer(this))
 {
     ui->setupUi(this);
     ui->dcLabel->setStyleSheet("QLabel { color : red; }");
@@ -115,6 +116,7 @@ PhoneAudioLink::PhoneAudioLink(QWidget *parent)
     });
 
     connect(ui->connect, &QPushButton::pressed, this, &PhoneAudioLink::connectSelectedDevice);
+    connect(ui->disconnect, &QPushButton::pressed, this, &PhoneAudioLink::disconnect);
 
     connect(ui->deviceComboBox, &QComboBox::currentIndexChanged, this, &PhoneAudioLink::deviceComboChanged);
 
@@ -168,10 +170,15 @@ void PhoneAudioLink::closeEvent(QCloseEvent *event) {
 
 void PhoneAudioLink::playPause() {
     ui->playPause->toggleState();
+//TODO: change this to toggled so I know if we're paused or playing
+    //delegate the play/pause command to A2DPStreamer.
+    if (a2dpStreamer)
+        a2dpStreamer->playPause();
 }
 
 void PhoneAudioLink::startDiscovery() {
     ui->deviceComboBox->clear();
+    discoveredDevices.clear();
     discoveryAgent->stop();
     discoveryAgent->start();
 }
@@ -198,6 +205,7 @@ void PhoneAudioLink::appendDevice(const QBluetoothDeviceInfo &device) {
 
         //add the device
         ui->deviceComboBox->addItem(device.name()+tag, QVariant::fromValue(device));
+        discoveredDevices.append(device);
 
         //if it matches the saved device, set that to the current index
         if(device.address() == savedDeviceAddress)
@@ -208,6 +216,7 @@ void PhoneAudioLink::appendDevice(const QBluetoothDeviceInfo &device) {
     if(isPhone){
         //add the device
         ui->deviceComboBox->addItem(device.name(), QVariant::fromValue(device));
+        discoveredDevices.append(device);
 
         //if it matches the saved device, set that to the current index
         if(device.address() == savedDeviceAddress)
@@ -220,20 +229,30 @@ void PhoneAudioLink::appendDevice(const QBluetoothDeviceInfo &device) {
 void PhoneAudioLink::connectSelectedDevice() {
     //get the device info from the ComboBox
     auto device = ui->deviceComboBox->currentData().value<QBluetoothDeviceInfo>();
-    QBluetoothLocalDevice localDevice;
-    qDebug()<<"Device: "<<device.name();
-    //pair if not already paired.
-    if (localDevice.hostMode() != QBluetoothLocalDevice::HostConnectable) {
-        localDevice.powerOn();
-        qDebug()<<"Powered on!";
+
+    if (a2dpStreamer) {
+        a2dpStreamer->connectToDevice(device);
     }
-    if (!((localDevice.pairingStatus(device.address()) == QBluetoothLocalDevice::Paired)
-        || (localDevice.pairingStatus(device.address()) == QBluetoothLocalDevice::AuthorizedPaired))) {
-        localDevice.requestPairing(device.address(), QBluetoothLocalDevice::Paired);
-        qDebug()<<"requested pairing!";
+
+    // QBluetoothLocalDevice localDevice;
+    // qDebug()<<"Device: "<<device.name();
+    // //pair if not already paired.
+    // if (localDevice.hostMode() != QBluetoothLocalDevice::HostConnectable) {
+    //     localDevice.powerOn();
+    //     qDebug()<<"Powered on!";
+    // }
+    // if (!((localDevice.pairingStatus(device.address()) == QBluetoothLocalDevice::Paired)
+    //     || (localDevice.pairingStatus(device.address()) == QBluetoothLocalDevice::AuthorizedPaired))) {
+    //     localDevice.requestPairing(device.address(), QBluetoothLocalDevice::Paired);
+    //     qDebug()<<"requested pairing!";
+    // }
+    // else qDebug()<<"device already paired!";
+}
+
+void PhoneAudioLink::disconnect() {
+    if (a2dpStreamer) {
+        a2dpStreamer->disconnectDevice();
     }
-    else qDebug()<<"device already paired!";
-    // Once paired, the OS should handle A2DP routing.
 }
 
 //triggers when the index of the device combo box is changed
