@@ -112,7 +112,7 @@ void A2DPStreamer::setupAudio()
         format = defaultOutput.preferredFormat();
     }
 
-    m_audioSink = new QAudioSink(format, defaultOutput, this);
+    m_audioSink = new QAudioSink(defaultOutput, format, this);
     connect(m_audioSink, &QAudioSink::stateChanged,
             this, &A2DPStreamer::onAudioStateChanged);
 }
