@@ -1,4 +1,4 @@
-QT       += core gui bluetooth
+QT       += core gui bluetooth multimedia
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -10,11 +10,11 @@ CONFIG += c++17
 
 RC_ICONS = icon.ico
 
-INCLUDEPATH += "C:/gstreamer/1.0/msvc_x86_64/include/gstreamer-1.0" \
-               "C:/gstreamer/1.0/msvc_x86_64/include/glib-2.0" \
-               "C:/gstreamer/1.0/msvc_x86_64/lib/glib-2.0/include"
+# INCLUDEPATH += "C:/gstreamer/1.0/msvc_x86_64/include/gstreamer-1.0" \
+#                "C:/gstreamer/1.0/msvc_x86_64/include/glib-2.0" \
+#                "C:/gstreamer/1.0/msvc_x86_64/lib/glib-2.0/include"
 
-LIBS += -LC:/gstreamer/1.0/msvc_x86_64/lib -lgstreamer-1.0 -lglib-2.0 -lgobject-2.0
+# LIBS += -LC:/gstreamer/1.0/msvc_x86_64/lib -lgstreamer-1.0 -lglib-2.0 -lgobject-2.0
 
 SOURCES += \
     a2dpstreamer.cpp \

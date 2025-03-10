@@ -2,8 +2,10 @@
 #define A2DPSTREAMER_H
 
 #include <QObject>
-
-#include <gst/gst.h>
+#include <QBluetoothDeviceInfo>
+#include <QBluetoothSocket>
+#include <QAudioFormat>
+#include <QAudioSink>
 
 class A2DPStreamer : public QObject
 {
@@ -12,19 +14,35 @@ public:
     explicit A2DPStreamer(QObject *parent = nullptr);
     ~A2DPStreamer();
 
-    bool setupPipeline(const QString&);
+    // Connects to the selected Bluetooth device.
+    bool connectToDevice(const QBluetoothDeviceInfo &deviceInfo);
+    void disconnectDevice();
 
 public slots:
-    void play();
-    void pause();
-    void stop();
+    // Tells the Bluetooth device to play or pause.
+    void playPause();
+    // Tells the Bluetooth device to skip forwards.
+    void forward();
+    // Tells the Bluetooth device to skip backwards.
+    void backward();
 
-signals:
-    void connectionStatusChanged(bool);
-    // Additional signals for error reporting, etc.
+private slots:
+    // Internal slots to manage the socket and audio states.
+    void onSocketConnected();
+    void onSocketDisconnected();
+    void onReadyRead();
+    void onAudioStateChanged(QAudio::State state);
 
 private:
-    GstElement* pipeline;
+    // Helper to send a command to the Bluetooth device.
+    void sendCommand(const QString &command);
+    // Sets up the audio output with a suitable format.
+    void setupAudio();
+
+    QBluetoothSocket *m_socket;
+    QAudioSink *m_audioSink;         // New audio sink for Qt 6
+    QIODevice *m_audioDevice;        // Device returned by m_audioSink->start() to write audio data
+    bool m_isPlaying;
 };
 
 #endif // A2DPSTREAMER_H
