@@ -133,6 +133,7 @@ PhoneAudioLink::~PhoneAudioLink() {
     if(discoveryAgent){
         discoveryAgent->stop();//stop bluetooth discovery
         discoveryAgent->deleteLater();
+        discoveryAgent = nullptr;
     }
 }
 
@@ -162,7 +163,6 @@ void PhoneAudioLink::showFromTray() {
 void PhoneAudioLink::exitApp() {
     saveInitData();
     trayIcon->hide();//hide the tray icon
-    discoveryAgent->stop();//stop bluetooth discovery
     QApplication::quit();//call the super method
 }
 

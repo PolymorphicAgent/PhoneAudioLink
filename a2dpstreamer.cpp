@@ -10,8 +10,8 @@ A2DPStreamer::A2DPStreamer(QObject *parent)
     m_socket(nullptr),
     m_audioSink(nullptr),
     m_audioDevice(nullptr),
-    m_isPlaying(false),
-    m_serviceDiscoveryAgent(nullptr)
+    m_isPlaying(false)
+    // m_serviceDiscoveryAgent(nullptr)
 {
 }
 
@@ -25,65 +25,60 @@ bool A2DPStreamer::connectToDevice(const QBluetoothDeviceInfo &deviceInfo)
     // Clean up any existing connection.
     disconnectDevice();
 
-    // Save the pending device information.
-    m_pendingDevice = deviceInfo;
+    // Create a Bluetooth socket (using RFCOMM protocol).
+    m_socket = new QBluetoothSocket(QBluetoothServiceInfo::RfcommProtocol, this);
+    connect(m_socket, &QBluetoothSocket::connected, this, &A2DPStreamer::onSocketConnected);
+    connect(m_socket, &QBluetoothSocket::disconnected, this, &A2DPStreamer::onSocketDisconnected);
+    connect(m_socket, &QBluetoothSocket::readyRead, this, &A2DPStreamer::onReadyRead);
+    connect(m_socket, &QBluetoothSocket::errorOccurred, this, &A2DPStreamer::onSocketError);
 
-    // Create a service discovery agent for the remote device.
-    m_serviceDiscoveryAgent = new QBluetoothServiceDiscoveryAgent(deviceInfo.address(), this);
-    connect(m_serviceDiscoveryAgent, &QBluetoothServiceDiscoveryAgent::serviceDiscovered,
-            this, &A2DPStreamer::onServiceDiscovered);
-    connect(m_serviceDiscoveryAgent, &QBluetoothServiceDiscoveryAgent::finished,
-            this, &A2DPStreamer::onServiceDiscoveryFinished);
-
-    m_serviceDiscoveryAgent->start();
-    qDebug() << "Started service discovery on" << deviceInfo.address().toString();
+    //initiate connection
+    m_socket->connectToService(deviceInfo.address(), QBluetoothUuid(QBluetoothUuid::ProtocolUuid::Rfcomm));
+    qDebug() << "Attempting to connect to service on" << deviceInfo.address().toString();
     return true;
 
-    // // Create a Bluetooth socket (using RFCOMM protocol).
-    // m_socket = new QBluetoothSocket(QBluetoothServiceInfo::RfcommProtocol, this);
-    // connect(m_socket, &QBluetoothSocket::connected, this, &A2DPStreamer::onSocketConnected);
-    // connect(m_socket, &QBluetoothSocket::disconnected, this, &A2DPStreamer::onSocketDisconnected);
-    // connect(m_socket, &QBluetoothSocket::readyRead, this, &A2DPStreamer::onReadyRead);
-    // connect(m_socket, &QBluetoothSocket::errorOccurred, this, &A2DPStreamer::onSocketError);
+    return true;
 
-    // // Initiate connection.
-    // // (Adjust the service UUID as needed – for example, QBluetoothUuid::AudioSink.)
-    // m_socket->connectToService(deviceInfo.address(), QBluetoothUuid(QBluetoothUuid::ServiceClassUuid::AudioSource));
-    // qDebug() << "Attempting to connect to service on" << deviceInfo.address().toString();
-    // return true;
+
 }
 
-void A2DPStreamer::onServiceDiscovered(const QBluetoothServiceInfo &info)
-{
-    qDebug() << "Service discovered:" << info.serviceName()
-             << info.serviceUuid().toString();
+// void A2DPStreamer::onServiceDiscovered(const QBluetoothServiceInfo &info)
+// {
+//     qDebug() << "Service discovered:" << info.serviceName()
+//              << info.serviceUuid().toString();
 
-    // If the service is valid, use it and stop further discovery.
-    if (info.isValid()) {
-        m_serviceDiscoveryAgent->stop();
-        m_serviceDiscoveryAgent->deleteLater();
-        m_serviceDiscoveryAgent = nullptr;
+//     // If the service is valid, use it and stop further discovery.
+//     if (info.isValid()) {
+//         m_serviceDiscoveryAgent->stop();
+//         m_serviceDiscoveryAgent->deleteLater();
+//         m_serviceDiscoveryAgent = nullptr;
 
-        // Create the Bluetooth socket using the discovered service's UUID.
-        m_socket = new QBluetoothSocket(QBluetoothServiceInfo::RfcommProtocol, this);
-        connect(m_socket, &QBluetoothSocket::connected, this, &A2DPStreamer::onSocketConnected);
-        connect(m_socket, &QBluetoothSocket::disconnected, this, &A2DPStreamer::onSocketDisconnected);
-        connect(m_socket, &QBluetoothSocket::readyRead, this, &A2DPStreamer::onReadyRead);
-        connect(m_socket, &QBluetoothSocket::errorOccurred, this, &A2DPStreamer::onSocketError);
+//         // Create the Bluetooth socket using the discovered service's UUID.
+//         m_socket = new QBluetoothSocket(QBluetoothServiceInfo::RfcommProtocol, this);
+//         connect(m_socket, &QBluetoothSocket::connected, this, &A2DPStreamer::onSocketConnected);
+//         connect(m_socket, &QBluetoothSocket::disconnected, this, &A2DPStreamer::onSocketDisconnected);
+//         connect(m_socket, &QBluetoothSocket::readyRead, this, &A2DPStreamer::onReadyRead);
+//         connect(m_socket, &QBluetoothSocket::errorOccurred, this, &A2DPStreamer::onSocketError);
 
-        qDebug() << "Attempting to connect to service with UUID:" << info.serviceUuid().toString();
-        m_socket->connectToService(m_pendingDevice.address(), info.serviceUuid());
-    }
-}
+//         qDebug() << "Attempting to connect to service with UUID:" << info.serviceUuid().toString();
+//         m_socket->connectToService(m_pendingDevice.address(), info.serviceUuid());
+//     }
+// }
 
-void A2DPStreamer::onServiceDiscoveryFinished()
-{
-    if (!m_socket) {
-        qWarning() << "Service discovery finished without finding a valid service.";
-        m_serviceDiscoveryAgent->deleteLater();
-        m_serviceDiscoveryAgent = nullptr;
-    }
-}
+// void A2DPStreamer::onServiceDiscoveryFinished()
+// {
+//     if (!m_socket) {
+//         qWarning() << "Service discovery finished without finding a valid service.";
+//         m_serviceDiscoveryAgent->deleteLater();
+//         m_serviceDiscoveryAgent = nullptr;
+//     }
+// }
+
+// void A2DPStreamer::onServiceDiscoveryError(QBluetoothServiceDiscoveryAgent::Error error)
+// {
+//     qWarning() << "Service discovery error:" << error
+//                << (m_serviceDiscoveryAgent ? m_serviceDiscoveryAgent->errorString() : QString());
+// }
 
 void A2DPStreamer::disconnectDevice()
 {
@@ -99,11 +94,11 @@ void A2DPStreamer::disconnectDevice()
         m_audioSink = nullptr;
         m_audioDevice = nullptr;
     }
-    if (m_serviceDiscoveryAgent) {
-        m_serviceDiscoveryAgent->stop();
-        m_serviceDiscoveryAgent->deleteLater();
-        m_serviceDiscoveryAgent = nullptr;
-    }
+    // if (m_serviceDiscoveryAgent) {
+    //     m_serviceDiscoveryAgent->stop();
+    //     m_serviceDiscoveryAgent->deleteLater();
+    //     m_serviceDiscoveryAgent = nullptr;
+    // }
 }
 
 void A2DPStreamer::onSocketConnected()

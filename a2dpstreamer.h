@@ -8,6 +8,7 @@
 #include <QAudioFormat>
 #include <QAudioSink>
 #include <QObject>
+#include <QTimer>
 
 class A2DPStreamer : public QObject
 {
@@ -35,8 +36,9 @@ private slots:
     void onReadyRead();
     void onAudioStateChanged(QAudio::State state);
     void onSocketError(QBluetoothSocket::SocketError error);
-    void onServiceDiscovered(const QBluetoothServiceInfo &info);
-    void onServiceDiscoveryFinished();
+    // void onServiceDiscovered(const QBluetoothServiceInfo &info);
+    // void onServiceDiscoveryFinished();
+    // void onServiceDiscoveryError(QBluetoothServiceDiscoveryAgent::Error error);
 
 private:
     // Helper to send a command to the Bluetooth device.
@@ -45,13 +47,14 @@ private:
     void setupAudio();
 
     QBluetoothSocket *m_socket;
+    QBluetoothUuid fallbackUuid = QBluetoothUuid::ServiceClassUuid::AudioSource;
     QAudioSink *m_audioSink;         // New audio sink for Qt 6
     QIODevice *m_audioDevice;        // Device returned by m_audioSink->start() to write audio data
     bool m_isPlaying;
 
     // Members for service discovery.
-    QBluetoothServiceDiscoveryAgent *m_serviceDiscoveryAgent;
-    QBluetoothDeviceInfo m_pendingDevice;
+    // QBluetoothServiceDiscoveryAgent *m_serviceDiscoveryAgent;
+    // QBluetoothDeviceInfo m_pendingDevice;
 };
 
 #endif // A2DPSTREAMER_H
