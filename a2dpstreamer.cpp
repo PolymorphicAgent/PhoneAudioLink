@@ -32,9 +32,10 @@ bool A2DPStreamer::connectToDevice(const QBluetoothDeviceInfo &deviceInfo)
     connect(m_socket, &QBluetoothSocket::readyRead, this, &A2DPStreamer::onReadyRead);
     connect(m_socket, &QBluetoothSocket::errorOccurred, this, &A2DPStreamer::onSocketError);
 
-    //initiate connection
-    m_socket->connectToService(deviceInfo.address(), QBluetoothUuid(QBluetoothUuid::ProtocolUuid::Rfcomm));
+    //initiate connection These uuids work: 02030302-1d19-415f-86f2-22a2106a0a77,
+    m_socket->connectToService(deviceInfo.address(), QBluetoothUuid("00000000-deca-fade-deca-deafdecacafe"));
     qDebug() << "Attempting to connect to service on" << deviceInfo.address().toString();
+    qDebug() << "Services: " << deviceInfo.serviceUuids();
     return true;
 
     return true;
