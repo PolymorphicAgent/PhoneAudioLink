@@ -10,7 +10,8 @@ A2DPStreamer::A2DPStreamer(QObject *parent)
     m_socket(nullptr),
     m_audioSink(nullptr),
     m_audioDevice(nullptr),
-    m_isPlaying(false)
+    m_isPlaying(false),
+    m_serviceDiscoveryAgent(nullptr)
 {
 }
 
@@ -22,22 +23,67 @@ A2DPStreamer::~A2DPStreamer()
 bool A2DPStreamer::connectToDevice(const QBluetoothDeviceInfo &deviceInfo)
 {
     // Clean up any existing connection.
-    if (m_socket) {
-        disconnectDevice();
-    }
+    disconnectDevice();
 
-    // Create a Bluetooth socket (using RFCOMM protocol).
-    m_socket = new QBluetoothSocket(QBluetoothServiceInfo::RfcommProtocol, this);
-    connect(m_socket, &QBluetoothSocket::connected, this, &A2DPStreamer::onSocketConnected);
-    connect(m_socket, &QBluetoothSocket::disconnected, this, &A2DPStreamer::onSocketDisconnected);
-    connect(m_socket, &QBluetoothSocket::readyRead, this, &A2DPStreamer::onReadyRead);
+    // Save the pending device information.
+    m_pendingDevice = deviceInfo;
 
-    // Initiate connection.
-    // (Adjust the service UUID as needed – for example, QBluetoothUuid::AudioSink.)
-    m_socket->connectToService(deviceInfo.address(), QBluetoothUuid(QBluetoothUuid::ServiceClassUuid::AudioSink));
+    // Create a service discovery agent for the remote device.
+    m_serviceDiscoveryAgent = new QBluetoothServiceDiscoveryAgent(deviceInfo.address(), this);
+    connect(m_serviceDiscoveryAgent, &QBluetoothServiceDiscoveryAgent::serviceDiscovered,
+            this, &A2DPStreamer::onServiceDiscovered);
+    connect(m_serviceDiscoveryAgent, &QBluetoothServiceDiscoveryAgent::finished,
+            this, &A2DPStreamer::onServiceDiscoveryFinished);
+
+    m_serviceDiscoveryAgent->start();
+    qDebug() << "Started service discovery on" << deviceInfo.address().toString();
     return true;
+
+    // // Create a Bluetooth socket (using RFCOMM protocol).
+    // m_socket = new QBluetoothSocket(QBluetoothServiceInfo::RfcommProtocol, this);
+    // connect(m_socket, &QBluetoothSocket::connected, this, &A2DPStreamer::onSocketConnected);
+    // connect(m_socket, &QBluetoothSocket::disconnected, this, &A2DPStreamer::onSocketDisconnected);
+    // connect(m_socket, &QBluetoothSocket::readyRead, this, &A2DPStreamer::onReadyRead);
+    // connect(m_socket, &QBluetoothSocket::errorOccurred, this, &A2DPStreamer::onSocketError);
+
+    // // Initiate connection.
+    // // (Adjust the service UUID as needed – for example, QBluetoothUuid::AudioSink.)
+    // m_socket->connectToService(deviceInfo.address(), QBluetoothUuid(QBluetoothUuid::ServiceClassUuid::AudioSource));
+    // qDebug() << "Attempting to connect to service on" << deviceInfo.address().toString();
+    // return true;
 }
 
+void A2DPStreamer::onServiceDiscovered(const QBluetoothServiceInfo &info)
+{
+    qDebug() << "Service discovered:" << info.serviceName()
+             << info.serviceUuid().toString();
+
+    // If the service is valid, use it and stop further discovery.
+    if (info.isValid()) {
+        m_serviceDiscoveryAgent->stop();
+        m_serviceDiscoveryAgent->deleteLater();
+        m_serviceDiscoveryAgent = nullptr;
+
+        // Create the Bluetooth socket using the discovered service's UUID.
+        m_socket = new QBluetoothSocket(QBluetoothServiceInfo::RfcommProtocol, this);
+        connect(m_socket, &QBluetoothSocket::connected, this, &A2DPStreamer::onSocketConnected);
+        connect(m_socket, &QBluetoothSocket::disconnected, this, &A2DPStreamer::onSocketDisconnected);
+        connect(m_socket, &QBluetoothSocket::readyRead, this, &A2DPStreamer::onReadyRead);
+        connect(m_socket, &QBluetoothSocket::errorOccurred, this, &A2DPStreamer::onSocketError);
+
+        qDebug() << "Attempting to connect to service with UUID:" << info.serviceUuid().toString();
+        m_socket->connectToService(m_pendingDevice.address(), info.serviceUuid());
+    }
+}
+
+void A2DPStreamer::onServiceDiscoveryFinished()
+{
+    if (!m_socket) {
+        qWarning() << "Service discovery finished without finding a valid service.";
+        m_serviceDiscoveryAgent->deleteLater();
+        m_serviceDiscoveryAgent = nullptr;
+    }
+}
 
 void A2DPStreamer::disconnectDevice()
 {
@@ -53,6 +99,11 @@ void A2DPStreamer::disconnectDevice()
         m_audioSink = nullptr;
         m_audioDevice = nullptr;
     }
+    if (m_serviceDiscoveryAgent) {
+        m_serviceDiscoveryAgent->stop();
+        m_serviceDiscoveryAgent->deleteLater();
+        m_serviceDiscoveryAgent = nullptr;
+    }
 }
 
 void A2DPStreamer::onSocketConnected()
@@ -65,6 +116,7 @@ void A2DPStreamer::onSocketConnected()
     if (m_audioSink && m_socket) {
         // Start the audio sink and get a writable audio device.
         m_audioDevice = m_audioSink->start();
+        qDebug() << "Audio sink started.";
     }
 }
 
@@ -95,6 +147,10 @@ void A2DPStreamer::onAudioStateChanged(QAudio::State state)
         // Handle any errors if needed.
         // Note: In QAudioSink, error() might not be directly available.
     }
+}
+
+void A2DPStreamer::onSocketError(QBluetoothSocket::SocketError e){
+    qDebug()<<"Socket error:"<<e;
 }
 
 void A2DPStreamer::setupAudio()

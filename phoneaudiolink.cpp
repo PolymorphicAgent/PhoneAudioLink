@@ -130,6 +130,10 @@ PhoneAudioLink::PhoneAudioLink(QWidget *parent)
 //destructor
 PhoneAudioLink::~PhoneAudioLink() {
     delete ui;
+    if(discoveryAgent){
+        discoveryAgent->stop();//stop bluetooth discovery
+        discoveryAgent->deleteLater();
+    }
 }
 
 //public function that returns if the program should start in a minimized state
