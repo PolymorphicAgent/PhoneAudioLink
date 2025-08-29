@@ -1,4 +1,4 @@
-# PhoneAudioLink
+# PhoneAudioLink - This project has been abandoned for the time being
 Allows Seamless Bluetooth Streaming From Your IPhone to Your PC.
 
 Curently under development, so nothing actually works.
