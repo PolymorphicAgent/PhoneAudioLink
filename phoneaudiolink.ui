@@ -10,6 +10,18 @@
     <height>316</height>
    </rect>
   </property>
+  <property name="minimumSize">
+   <size>
+    <width>444</width>
+    <height>316</height>
+   </size>
+  </property>
+  <property name="maximumSize">
+   <size>
+    <width>444</width>
+    <height>316</height>
+   </size>
+  </property>
   <property name="windowTitle">
    <string>PhoneAudioLink</string>
   </property>
@@ -319,19 +331,6 @@
      <set>Qt::AlignmentFlag::AlignCenter</set>
     </property>
    </widget>
-   <widget class="QPushButton" name="debug">
-    <property name="geometry">
-     <rect>
-      <x>329</x>
-      <y>143</y>
-      <width>91</width>
-      <height>51</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Debug</string>
-    </property>
-   </widget>
    <zorder>frame_3</zorder>
    <zorder>frame_2</zorder>
    <zorder>frame</zorder>
@@ -339,7 +338,6 @@
    <zorder>connect</zorder>
    <zorder>label_2</zorder>
    <zorder>label_3</zorder>
-   <zorder>debug</zorder>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
@@ -379,8 +377,15 @@
     </property>
     <addaction name="compatAction"/>
    </widget>
+   <widget class="QMenu" name="menudebug">
+    <property name="title">
+     <string>debug</string>
+    </property>
+    <addaction name="debug"/>
+   </widget>
    <addaction name="menuStartup"/>
    <addaction name="menuAdvanced"/>
+   <addaction name="menudebug"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="startMinimizedAction">
@@ -447,6 +452,16 @@
    </property>
    <property name="toolTip">
     <string>Enable if your device isn't showing up.</string>
+   </property>
+  </action>
+  <action name="debug">
+   <property name="text">
+    <string>debug</string>
+   </property>
+  </action>
+  <action name="actionuuid">
+   <property name="text">
+    <string>uuid</string>
    </property>
   </action>
  </widget>

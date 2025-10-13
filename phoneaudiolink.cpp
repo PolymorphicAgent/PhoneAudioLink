@@ -1,15 +1,18 @@
 #include "phoneaudiolink.h"
 #include "ui_phoneaudiolink.h"
 
+#include <QRegularExpression>
+
 PhoneAudioLink::PhoneAudioLink(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::PhoneAudioLink)
-    , a2dpStreamer(new A2DPStreamer(this))
+    , audioSink(nullptr)
 {
     ui->setupUi(this);
     ui->dcLabel->setStyleSheet("QLabel { color : red; }");
     ui->menuAdvanced->setToolTipsVisible(true);
 
+    // Set icons based on color scheme
     if(QGuiApplication::styleHints()->colorScheme() == Qt::ColorScheme::Light) {
         ui->forward->setIcon(QPixmap(":/icons/Iconparts/forward-512.png"));
         ui->back->setIcon(QPixmap(":/icons/Iconparts/back-512.png"));
@@ -18,6 +21,70 @@ PhoneAudioLink::PhoneAudioLink(QWidget *parent)
         ui->forward->setIcon(QPixmap(":/icons/Iconparts/forward-512-white.png"));
         ui->back->setIcon(QPixmap(":/icons/Iconparts/back-512-white.png"));
     }
+
+    // Create A2DP Sink manager
+    audioSink = new BluetoothA2DPSink(this);
+
+    // Connect A2DP device discovery signals
+    connect(audioSink, &BluetoothA2DPSink::deviceDiscovered, this,
+            &PhoneAudioLink::onA2DPDeviceDiscovered);
+    connect(audioSink, &BluetoothA2DPSink::discoveryCompleted, this,
+            &PhoneAudioLink::onA2DPDiscoveryCompleted);
+
+    // Connect sink signals to UI updates
+    connect(audioSink, &BluetoothA2DPSink::sinkEnabled, this, [this]() {
+        ui->dcLabel->setText("Sink Enabled");
+        ui->dcLabel->setStyleSheet("QLabel { color : orange; }");
+        qDebug() << "A2DP Sink enabled, now open connection";
+
+        // Automatically open the connection after enabling
+        QTimer::singleShot(500, this, [this]() {
+            audioSink->openConnection();
+        });
+    });
+
+    connect(audioSink, &BluetoothA2DPSink::connectionOpened, this, [this]() {
+        // Only show notification if we haven't already for this connection
+        if (!connectionNotificationShown) {
+            connectionNotificationShown = true;
+
+            qDebug() << "Audio streaming active!";
+
+            // Show notification once
+            if (trayIcon) {
+                trayIcon->showMessage("Audio Streaming",
+                                      "Your phone is now streaming audio to this PC",
+                                      QSystemTrayIcon::Information, 3000);
+            }
+        }
+
+        ui->dcLabel->setText("Connected");
+        ui->dcLabel->setStyleSheet("QLabel { color : green; }");
+        ui->connect->setEnabled(false);
+        ui->disconnect->setEnabled(true);
+    });
+
+    connect(audioSink, &BluetoothA2DPSink::connectionClosed, this, [this]() {
+        // Reset notification flag so it shows again on next connection
+        connectionNotificationShown = false;
+
+        ui->dcLabel->setText("Disconnected");
+        ui->dcLabel->setStyleSheet("QLabel { color : red; }");
+        ui->connect->setEnabled(true);
+        ui->disconnect->setEnabled(false);
+        qDebug() << "Audio streaming stopped";
+    });
+
+    connect(audioSink, &BluetoothA2DPSink::connectionError, this, [this](const QString &error) {
+        QMessageBox::warning(this, tr("Connection Error"), error);
+        ui->dcLabel->setText("Error");
+        ui->dcLabel->setStyleSheet("QLabel { color : red; }");
+        qWarning() << "Connection error:" << error;
+    });
+
+    connect(audioSink, &BluetoothA2DPSink::stateChanged, this, [](const QString &state) {
+        qDebug() << "Sink state:" << state;
+    });
 
     //create and connect the bluetooth discovery agent
     discoveryAgent = new QBluetoothDeviceDiscoveryAgent(this);
@@ -41,7 +108,7 @@ PhoneAudioLink::PhoneAudioLink(QWidget *parent)
     loadInitData();
 
     if(maximizeBluetoothCompatability)
-        ui->info->setToolTip("Showing all devices for compatability's sake.\nNot all of these devices are guaranteed to support A2DP.");
+        ui->info->setToolTip("Showing all devices for compatability's sake.\nNot all of these devices are guaranteed to be supported.");
     else
         ui->info->setToolTip("Filtering for only phone devices.\nUse Advanced->Maximize Bluetooth compatability to show more devices.");
 
@@ -77,9 +144,21 @@ PhoneAudioLink::PhoneAudioLink(QWidget *parent)
         }
     });
 
-    connect(ui->playPause, SIGNAL(pressed()), this, SLOT(     playPause()));
-    connect(ui->refresh  , SIGNAL(pressed()), this, SLOT(startDiscovery()));
+    // Connect UI buttons to A2DP sink
+    connect(ui->playPause, &QPushButton::pressed, this, &PhoneAudioLink::playPause);
+    connect(ui->forward, &QPushButton::pressed, this, [this]() {
+        if (audioSink) audioSink->sendNext();
+    });
+    connect(ui->back, &QPushButton::pressed, this, [this]() {
+        if (audioSink) audioSink->sendPrevious();
+    });
+    connect(ui->refresh, &QPushButton::pressed, this, &PhoneAudioLink::startDiscovery);
+    connect(ui->connect, &QPushButton::pressed, this, &PhoneAudioLink::connectSelectedDevice);
+    connect(ui->disconnect, &QPushButton::pressed, this, &PhoneAudioLink::disconnect);
+    connect(ui->deviceComboBox, &QComboBox::currentIndexChanged, this,
+            &PhoneAudioLink::deviceComboChanged);
 
+    // Setup Menu Actions
     ui->compatAction->setChecked(maximizeBluetoothCompatability);
     ui->connectStartupAction->setChecked(connectAutomatically);
     ui->startMinimizedAction->setChecked(startMinimized);
@@ -115,26 +194,35 @@ PhoneAudioLink::PhoneAudioLink(QWidget *parent)
         QToolTip::showText(this->mapToGlobal(ui->info->pos()), ui->info->toolTip(), this, {}, 10000);
     });
 
-    connect(ui->connect, &QPushButton::pressed, this, &PhoneAudioLink::connectSelectedDevice);
-    connect(ui->disconnect, &QPushButton::pressed, this, &PhoneAudioLink::disconnect);
-
-    connect(ui->deviceComboBox, &QComboBox::currentIndexChanged, this, &PhoneAudioLink::deviceComboChanged);
-
-    connect(ui->debug, &QPushButton::pressed, this, [this](){
+    connect(ui->debug, &QAction::triggered, this, [this](){
         qDebug()<<"name: "<<ui->deviceComboBox->currentData().value<QBluetoothDeviceInfo>().name();
         QBluetoothLocalDevice localDevice;
         qDebug()<<"state: "<<localDevice.pairingStatus(ui->deviceComboBox->currentData().value<QBluetoothDeviceInfo>().address());
+        qDebug()<<"Service uuids:"<<ui->deviceComboBox->currentData().value<QBluetoothDeviceInfo>().serviceUuids();
     });
+
+    // Initial button states
+    ui->connect->setEnabled(true);
+    ui->disconnect->setEnabled(false);
+
+    // Auto-connect if enabled and device was saved
+    if (connectAutomatically && ui->deviceComboBox->count() > 0) {
+        QTimer::singleShot(2000, this, &PhoneAudioLink::connectSelectedDevice);
+    }
 }
 
 //destructor
 PhoneAudioLink::~PhoneAudioLink() {
-    delete ui;
+    // Stop device watchers
+    if (audioSink) {
+        audioSink->stopDeviceDiscovery();
+    }
     if(discoveryAgent){
         discoveryAgent->stop();//stop bluetooth discovery
         discoveryAgent->deleteLater();
         discoveryAgent = nullptr;
     }
+    delete ui;
 }
 
 //public function that returns if the program should start in a minimized state
@@ -175,16 +263,59 @@ void PhoneAudioLink::closeEvent(QCloseEvent *event) {
 void PhoneAudioLink::playPause() {
     ui->playPause->toggleState();
 //TODO: change this to toggled so I know if we're paused or playing
-    //delegate the play/pause command to A2DPStreamer.
-    if (a2dpStreamer)
-        a2dpStreamer->playPause();
+    // //delegate the play/pause command to A2DPStreamer.
+    // if (a2dpStreamer)
+    //     a2dpStreamer->playPause();
+
+    // // Delegate the play/pause command to the audio controller
+    // if (audioController)
+    //     audioController->playPause();
+
+    // Send play/pause command via A2DP sink
+    if (audioSink)
+        audioSink->sendPlayPause();
 }
 
 void PhoneAudioLink::startDiscovery() {
+
+    // Reset current
     ui->deviceComboBox->clear();
     discoveredDevices.clear();
+    deviceIdMap.clear();
+
+    // Start Qt Bluetooth discovery (for display/pairing info)
     discoveryAgent->stop();
     discoveryAgent->start();
+
+    // Also start Windows device discovery for A2DP connection
+    if (audioSink) {
+        audioSink->startDeviceDiscovery();
+    }
+}
+
+void PhoneAudioLink::onA2DPDeviceDiscovered(const QString &deviceId, const QString &deviceName) {
+    qDebug() << "A2DP device discovered:" << deviceName << "with ID:" << deviceId;
+
+    // Store the Windows device ID
+    deviceIdMap[deviceName] = deviceId;
+
+    // // Check if this device is already in the combo box
+    // bool found = false;
+    // for (int i = 0; i < ui->deviceComboBox->count(); ++i) {
+    //     if (ui->deviceComboBox->itemText(i).contains(deviceName)) {
+    //         found = true;
+    //         break;
+    //     }
+    // }
+
+    // // If not found, add it
+    // if (!found) {
+    //     ui->deviceComboBox->addItem(deviceName + " [A2DP]");
+    // }
+}
+
+void PhoneAudioLink::onA2DPDiscoveryCompleted() {
+    qDebug() << "A2DP discovery completed. Found" << deviceIdMap.size() << "devices!";
 }
 
 void PhoneAudioLink::appendDevice(const QBluetoothDeviceInfo &device) {
@@ -231,31 +362,70 @@ void PhoneAudioLink::appendDevice(const QBluetoothDeviceInfo &device) {
 
 //connect to the device in the combo box
 void PhoneAudioLink::connectSelectedDevice() {
-    //get the device info from the ComboBox
-    auto device = ui->deviceComboBox->currentData().value<QBluetoothDeviceInfo>();
 
-    if (a2dpStreamer) {
-        a2dpStreamer->connectToDevice(device);
+    QString selectedText = ui->deviceComboBox->currentText();
+
+    // Remove any tags like [A2DP], [Phone Device], etc.
+    QString deviceName = selectedText;
+    deviceName.remove(QRegularExpression("\\s*\\[.*\\]\\s*"));
+
+    qDebug() << "Attempting to connect to:" << deviceName;
+
+    if (audioSink && deviceIdMap.contains(deviceName)) {
+        // Use the Windows device ID we got from DeviceWatcher
+        QString windowsDeviceId = deviceIdMap[deviceName];
+
+        qDebug() << "Using Windows device ID:" << windowsDeviceId;
+
+        ui->dcLabel->setText("Connecting...");
+        ui->dcLabel->setStyleSheet("QLabel { color : orange; }");
+
+        // Enable the A2DP sink for this device
+        audioSink->enableSink(windowsDeviceId);
+    } else {
+        qWarning() << "Device not found in A2DP device map:" << deviceName;
+        QMessageBox::warning(this, tr("Connection Error"),
+                             tr("Device not found. Please make sure the device supports A2DP and try refreshing the device list."));
     }
 
-    // QBluetoothLocalDevice localDevice;
-    // qDebug()<<"Device: "<<device.name();
-    // //pair if not already paired.
-    // if (localDevice.hostMode() != QBluetoothLocalDevice::HostConnectable) {
-    //     localDevice.powerOn();
-    //     qDebug()<<"Powered on!";
+    // // get the device info from the ComboBox
+    // auto device = ui->deviceComboBox->currentData().value<QBluetoothDeviceInfo>();
+
+    // if (audioSink) {
+    //     // Convert Bluetooth address to device ID format
+    //     // Windows uses a specific format: BluetoothLE#BluetoothLE{MAC}-{SHORT_ID}
+    //     // For A2DP, we need the full device instance ID
+    //     // Qt gives us the MAC address, we need to construct the device ID
+
+    //     QString macAddress = device.address().toString().remove(':').toUpper();
+
+    //     // Windows AudioPlaybackConnection expects a device ID in this format:
+    //     // \\?\BTHENUM#{UUID}_{MAC}
+    //     // However, we can also use the simpler BT address format that AudioPlaybackConnection accepts
+    //     QString deviceId = macAddress;
+
+    //     qDebug() << "Connecting to device:" << device.name();
+    //     qDebug() << "Device ID:" << deviceId;
+
+    //     ui->dcLabel->setText("Connecting...");
+    //     ui->dcLabel->setStyleSheet("QLabel { color : orange; }");
+
+    //     // Enable the A2DP sink for this device
+    //     audioSink->enableSink(deviceId);
     // }
-    // if (!((localDevice.pairingStatus(device.address()) == QBluetoothLocalDevice::Paired)
-    //     || (localDevice.pairingStatus(device.address()) == QBluetoothLocalDevice::AuthorizedPaired))) {
-    //     localDevice.requestPairing(device.address(), QBluetoothLocalDevice::Paired);
-    //     qDebug()<<"requested pairing!";
-    // }
-    // else qDebug()<<"device already paired!";
 }
 
 void PhoneAudioLink::disconnect() {
-    if (a2dpStreamer) {
-        a2dpStreamer->disconnectDevice();
+    // if (a2dpStreamer) {
+    //     a2dpStreamer->disconnectDevice();
+    // }
+
+    // if (audioController) {
+    //     audioController->disconnectDevice();
+    // }
+
+    if (audioSink) {
+        audioSink->releaseConnection();
     }
 }
 
@@ -300,7 +470,10 @@ void PhoneAudioLink::loadInitData(){
     //check if init.json exists
     if(initFile.exists()){
         //read the file
-        initFile.open(QIODevice::ReadOnly);
+        if(!initFile.open(QIODevice::ReadOnly)){
+            QMessageBox::critical(this, tr("Error: FileReadError"), tr("Failed to open configuration file \'init.config\'"));
+            err = true;
+        }
         QJsonDocument doc = QJsonDocument::fromJson(initFile.readAll());
         initFile.close();
         QJsonObject initConfig = doc.object();

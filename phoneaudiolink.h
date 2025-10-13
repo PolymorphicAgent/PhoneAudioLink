@@ -2,7 +2,7 @@
 #define PHONEAUDIOLINK_H
 
 #include "startuphelp.h"
-#include "A2DPStreamer.h"
+#include "bluetootha2dpsink.h"
 
 #include <QBluetoothDeviceDiscoveryAgent>
 #include <QBluetoothLocalDevice>
@@ -13,6 +13,7 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QToolTip>
+#include <QTimer>
 #include <QFile>
 #include <QList>
 
@@ -30,7 +31,7 @@ public:
     PhoneAudioLink(QWidget *parent = nullptr);
     ~PhoneAudioLink();
 
-    //returns whether or not the program should be starting minimized
+    // Returns whether or not the program should be starting minimized
     bool getStartMinimized();
 
 protected:
@@ -41,6 +42,8 @@ private slots:
     void playPause();//is triggered when the play/pause button is pressed
     void startDiscovery();//starts the automatic discovery of bluetooth devices.
     void appendDevice(const QBluetoothDeviceInfo &);//is connected to the bluetooth discovery agent's deviceDiscovered slot
+    void onA2DPDeviceDiscovered(const QString &deviceId, const QString &deviceName);
+    void onA2DPDiscoveryCompleted();
     void connectSelectedDevice(); //triggers when the "connect" button is pressed
     void disconnect();
     void deviceComboChanged(int); //triggers when the deviceComboBox's index changes
@@ -61,8 +64,13 @@ private:
 
     QString stringifyUuids(QList<QBluetoothUuid>); //for debugging purposes
 
-    //members for A2DP streaming
-    A2DPStreamer *a2dpStreamer; //our streaming handler
+    BluetoothA2DPSink *audioSink;
     QList<QBluetoothDeviceInfo> discoveredDevices; //list of discovered devices
+
+    // Map device names to Windows device IDs for A2DP
+    QMap<QString, QString> deviceIdMap;
+
+    // Track if we've shown connection notification (prevent duplicates)
+    bool connectionNotificationShown;
 };
 #endif // PHONEAUDIOLINK_H
