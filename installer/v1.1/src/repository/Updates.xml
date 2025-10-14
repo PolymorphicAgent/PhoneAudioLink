@@ -1,0 +1,18 @@
+<Updates>
+ <ApplicationName>{AnyApplication}</ApplicationName>
+ <ApplicationVersion>1.0.0</ApplicationVersion>
+ <Checksum>true</Checksum>
+ <PackageUpdate>
+  <Name>dev.polimorph.phoneaudiolink</Name>
+  <DisplayName>Main Program</DisplayName>
+  <Description>Installs Phone Audio Link.</Description>
+  <Version>1.1</Version>
+  <ReleaseDate>2025-10-14</ReleaseDate>
+  <Default>true</Default>
+  <UpdateFile CompressedSize="19800317" OS="Any" UncompressedSize="70297822"/>
+  <DownloadableArchives>generic.7z,iconengines.7z,imageformats.7z,networkinformation.7z,platforms.7z,styles.7z,tls.7z,translations.7z,content.7z</DownloadableArchives>
+  <SHA1>428aa0dfef8278e441ec5e6d0f80274f4dfa0786</SHA1>
+ </PackageUpdate>
+ <SHA1>89c04c2ef7b48ca1927ab8f01df7b5872678ffc3</SHA1>
+ <MetadataName>2025-10-14-1354_meta.7z</MetadataName>
+</Updates>

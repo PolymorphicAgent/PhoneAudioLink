@@ -566,7 +566,7 @@ void PhoneAudioLink::deviceComboChanged(int i){
 //save initialization data
 void PhoneAudioLink::saveInitData() {
     //initialize the file object
-    QString fileName = "init.json";
+    QString fileName = QCoreApplication::applicationDirPath()+"/init.json";
     QJsonObject config;
 
     config["maximizeBluetoothCompatability"] = maximizeBluetoothCompatability;
@@ -592,7 +592,7 @@ void PhoneAudioLink::saveInitData() {
 //load initialization data
 void PhoneAudioLink::loadInitData(){
     //initialize file object
-    QString initFilePath = "init.json";
+    QString initFilePath = QCoreApplication::applicationDirPath()+"/init.json";
     QFile initFile(initFilePath);
     bool err = false;
 
