@@ -4,6 +4,16 @@
 #include <QLocale>
 #include <QTranslator>
 
+#include <iomanip>
+#include <sstream>
+
+QString version(){
+    std::stringstream tmp;
+    tmp<<std::fixed<<std::setprecision(GLOBAL_MINOR_PROGRAM_VERSION_SIZE);
+    tmp<<GLOBAL_PROGRAM_VERSION;
+    return QString::fromStdString(tmp.str());
+}
+
 int main(int argc, char *argv[])
 {
     qputenv("QT_LOGGING_RULES", "qt.qpa.fonts=false");
@@ -21,8 +31,7 @@ int main(int argc, char *argv[])
         }
     }
     PhoneAudioLink w;
+    w.setWindowTitle("Phone Audio Link v"+version());
     if(!w.getStartMinimized())w.show();
     return a.exec();
 }
-
-//TODO: implement connect at startup option

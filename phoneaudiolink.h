@@ -54,6 +54,7 @@ private slots:
     void loadInitData();//loads the json initialization configuration
     void showFromTray();//show the app from tray
     void updateTrayContext();
+    void updateAutoConnectMenu();
     void exitApp();//saves init data, then exits the app
 
 private:
@@ -66,10 +67,13 @@ private:
     bool maximizeBluetoothCompatability, startMinimized, connectAutomatically;//these are loaded from our json initialization configuration file
 
     QString stringifyUuids(QList<QBluetoothUuid>); //for debugging purposes
+    QString findDeviceName(const QBluetoothAddress&);
+
+    QString connectedDevice; // keep track of the currently connected device
 
     BluetoothA2DPSink *audioSink;
     QList<QBluetoothDeviceInfo> discoveredDevices; //list of discovered devices
-    QList<QAction*> trayDeviceActions;
+    QList<QAction*> trayDeviceActions, trayDeviceStartupActions, autoConnectMenuActions;
 
     // Map device names to Windows device IDs for A2DP
     QMap<QString, QString> deviceIdMap;

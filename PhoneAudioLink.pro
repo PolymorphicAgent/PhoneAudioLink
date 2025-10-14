@@ -23,6 +23,17 @@ win32 {
     message("Requires: MSVC compiler (MinGW not supported)")
 }
 
+# Program Version
+DEFINES += GLOBAL_PROGRAM_VERSION="1.1"
+DEFINES += GLOBAL_MINOR_PROGRAM_VERSION_SIZE=1
+
+CONFIG(debug, debug|release) {
+    DEFINES += DEBUG_BUILD
+} else {
+    DEFINES += RELEASE_BUILD
+}
+
+
 SOURCES += \
     # a2dpstreamer.cpp \
     animatedbutton.cpp \

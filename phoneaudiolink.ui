@@ -365,8 +365,14 @@
     <property name="title">
      <string>&amp;Startup</string>
     </property>
+    <widget class="QMenu" name="menuConnectOnLaunch">
+     <property name="title">
+      <string>&amp;Connect Automatically on Program Start</string>
+     </property>
+     <addaction name="actionPlaceholder"/>
+    </widget>
     <addaction name="startMinimizedAction"/>
-    <addaction name="connectStartupAction"/>
+    <addaction name="menuConnectOnLaunch"/>
     <addaction name="startOnLoginAction"/>
     <addaction name="separator"/>
     <addaction name="versionAction"/>
@@ -376,16 +382,10 @@
      <string>&amp;Advanced</string>
     </property>
     <addaction name="compatAction"/>
-   </widget>
-   <widget class="QMenu" name="menudebug">
-    <property name="title">
-     <string>debug</string>
-    </property>
     <addaction name="debug"/>
    </widget>
    <addaction name="menuStartup"/>
    <addaction name="menuAdvanced"/>
-   <addaction name="menudebug"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="startMinimizedAction">
@@ -410,19 +410,6 @@
    </property>
    <property name="text">
     <string>Start Program on &amp;Login</string>
-   </property>
-   <property name="font">
-    <font>
-     <family>Terminal</family>
-    </font>
-   </property>
-  </action>
-  <action name="connectStartupAction">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>&amp;Connect Automatically on Program Start</string>
    </property>
    <property name="font">
     <font>
@@ -462,6 +449,14 @@
   <action name="actionuuid">
    <property name="text">
     <string>uuid</string>
+   </property>
+  </action>
+  <action name="actionPlaceholder">
+   <property name="checkable">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Placeholder!</string>
    </property>
   </action>
  </widget>

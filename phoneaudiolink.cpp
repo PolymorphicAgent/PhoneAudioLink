@@ -148,7 +148,6 @@ PhoneAudioLink::PhoneAudioLink(QWidget *parent)
 
     // Setup Menu Actions
     ui->compatAction->setChecked(maximizeBluetoothCompatability);
-    ui->connectStartupAction->setChecked(connectAutomatically);
     ui->startMinimizedAction->setChecked(startMinimized);
 
     connect(ui->compatAction, &QAction::triggered, this, [this](bool checked){
@@ -164,18 +163,32 @@ PhoneAudioLink::PhoneAudioLink(QWidget *parent)
         startDiscovery();
     });
 
-    connect(ui->connectStartupAction, &QAction::triggered, this, [this](bool checked){
-        connectAutomatically=checked;
+    connect(ui->menuConnectOnLaunch, &QMenu::hovered, this, [this](){
+        static int c;
+        if(c == 50){
+            this->updateAutoConnectMenu();
+            this->updateTrayContext();
+            c = 0;
+        }
+        c++;
     });
 
+    QTimer::singleShot(2000, this, &PhoneAudioLink::updateAutoConnectMenu);
+
     connect(ui->startMinimizedAction, &QAction::triggered, this, [this](bool checked){
-        startMinimized=checked;
+        this->startMinimized=checked;
+        this->updateTrayContext();
+        this->updateAutoConnectMenu();
     });
 
     startupHelp = new StartupHelp(this);
 
     connect(ui->startOnLoginAction, &QAction::triggered, this, [this](){
         this->startupHelp->exec();
+    });
+
+    connect(ui->versionAction, &QAction::triggered, this, [this](){
+        QMessageBox::information(this, tr("Program Version"), tr("Version %1\t").arg(GLOBAL_PROGRAM_VERSION));
     });
 
     connect(ui->info, &QPushButton::clicked, this, [this](){
@@ -186,16 +199,32 @@ PhoneAudioLink::PhoneAudioLink(QWidget *parent)
         qDebug()<<"name: "<<ui->deviceComboBox->currentData().value<QBluetoothDeviceInfo>().name();
         QBluetoothLocalDevice localDevice;
         qDebug()<<"state: "<<localDevice.pairingStatus(ui->deviceComboBox->currentData().value<QBluetoothDeviceInfo>().address());
-        qDebug()<<"Service uuids:"<<ui->deviceComboBox->currentData().value<QBluetoothDeviceInfo>().serviceUuids();
+        qDebug()<<"address:"<<ui->deviceComboBox->currentData().value<QBluetoothDeviceInfo>().address();
+
+        this->updateTrayContext();
+        this->updateAutoConnectMenu();
     });
+
+#ifdef RELEASE_BUILD
+    ui->debug->setVisible(false);
+#endif
 
     // Initial button states
     ui->connect->setEnabled(true);
     ui->disconnect->setEnabled(false);
 
     // Auto-connect if enabled and device was saved
-    if (connectAutomatically && ui->deviceComboBox->count() > 0) {
-        QTimer::singleShot(2000, this, &PhoneAudioLink::connectSelectedDevice);
+    if (connectAutomatically) {
+        QTimer::singleShot(2000, this, [this](){
+            QString name = this->findDeviceName(savedDeviceAddress);
+            int index = this->ui->deviceComboBox->findText(name);
+            if(this->ui->deviceComboBox->count() > 0 && index != -1){
+                this->ui->deviceComboBox->setCurrentIndex(index);
+                this->connectSelectedDevice();
+                this->updateTrayContext();
+                this->updateAutoConnectMenu();
+            }
+        });
     }
 }
 
@@ -210,6 +239,8 @@ PhoneAudioLink::~PhoneAudioLink() {
         discoveryAgent->deleteLater();
         discoveryAgent = nullptr;
     }
+    if(ui->dcLabel->text() == "Connected")
+        ui->disconnect->click();
     delete ui;
 }
 
@@ -255,11 +286,19 @@ void PhoneAudioLink::showFromTray() {
 
 void PhoneAudioLink::updateTrayContext(){
     trayMenu->clear();
+    for(auto* i:std::as_const(trayDeviceActions))
+        delete i;
+    trayDeviceActions.clear();
+    for(auto * i:std::as_const(trayDeviceStartupActions))
+        delete i;
+    trayDeviceStartupActions.clear();
 
     QMenu *devicesMenu = new QMenu("Connect");
     for (int i = 0; i < ui->deviceComboBox->count(); i++) {
         trayDeviceActions.append(new QAction(ui->deviceComboBox->itemText(i)));
         trayDeviceActions.last()->setCheckable(true);
+        if(ui->dcLabel->text() == "Connected" && trayDeviceActions.last()->text() == connectedDevice) trayDeviceActions.last()->setChecked(true);
+        else trayDeviceActions.last()->setChecked(false);
         connect(trayDeviceActions.last(), &QAction::triggered, this, [this, i](){
             ui->deviceComboBox->setCurrentIndex(i);
             connectSelectedDevice();
@@ -275,15 +314,39 @@ void PhoneAudioLink::updateTrayContext(){
     QMenu *settingsMenu = new QMenu("Settings");
 
     QAction *startMinimized = new QAction("Start Minimized", this);
-    QAction *autoConnect = new QAction("Connect on Launch", this);
+    QMenu *autoConnect = new QMenu("Connect on Launch", this);
+    for (int i = 0; i < ui->deviceComboBox->count(); i++) {
+        trayDeviceStartupActions.append(new QAction(ui->deviceComboBox->itemText(i)));
+        trayDeviceStartupActions.last()->setCheckable(true);
+        if(connectAutomatically && [this](){
+                for (const QBluetoothDeviceInfo &info : std::as_const(this->discoveredDevices))
+                    if (info.address() == this->savedDeviceAddress && info.name() == this->trayDeviceStartupActions.last()->text())
+                        return true;
+                return false;
+            }()) trayDeviceStartupActions.last()->setChecked(true);
+        else trayDeviceStartupActions.last()->setChecked(false);
+        connect(trayDeviceStartupActions.last(), &QAction::triggered, this, [this, i](){
+            if(!this->connectAutomatically){
+                connectAutomatically = true;
+                this->savedDeviceAddress = ui->deviceComboBox->itemData(i).value<QBluetoothDeviceInfo>().address();
+            }
+            else connectAutomatically = false;
+            this->updateAutoConnectMenu();
+        });
+        autoConnect->addAction(trayDeviceStartupActions.last());
+    }
+
     QAction *autoStart = new QAction("Start on Login", this);
 
     startMinimized->setCheckable(true);
-    autoConnect->setCheckable(true);
-    autoStart->setCheckable(true);// TODO: signal/slot sync with menu bar settings
+    // autoConnect->setCheckable(true);
+    autoStart->setCheckable(false);
+
+    startMinimized->setChecked(this->startMinimized);
+    // autoConnect->setChecked(connectAutomatically);
 
     settingsMenu->addAction(startMinimized);
-    settingsMenu->addAction(autoConnect);
+    settingsMenu->addMenu(autoConnect);
     settingsMenu->addAction(autoStart);
 
     QAction *restoreAction = new QAction("Show", this);
@@ -296,7 +359,7 @@ void PhoneAudioLink::updateTrayContext(){
 
     //connect the tray context menu buttons to their respective actions
     connect(startMinimized, &QAction::triggered, ui->startMinimizedAction, &QAction::trigger);
-    connect(autoConnect, &QAction::triggered, ui->connectStartupAction, &QAction::trigger);
+    // connect(autoConnect, &QAction::triggered, ui->connectStartupAction, &QAction::trigger);
     connect(disconnectAction, &QAction::triggered, ui->disconnect, &QPushButton::click);
     connect(autoStart, &QAction::triggered, ui->startOnLoginAction, &QAction::trigger);
     connect(restoreAction, &QAction::triggered, this, &PhoneAudioLink::showFromTray);
@@ -320,6 +383,30 @@ void PhoneAudioLink::updateTrayContext(){
     trayIcon->show();
 }
 
+void PhoneAudioLink::updateAutoConnectMenu() {
+    ui->menuConnectOnLaunch->clear();
+    for (int i = 0; i < ui->deviceComboBox->count(); i++) {
+        autoConnectMenuActions.append(new QAction(ui->deviceComboBox->itemText(i)));
+        autoConnectMenuActions.last()->setCheckable(true);
+        if(connectAutomatically && [this](){
+                for (const QBluetoothDeviceInfo &info : std::as_const(this->discoveredDevices))
+                    if (info.address() == this->savedDeviceAddress && info.name() == this->autoConnectMenuActions.last()->text())
+                        return true;
+                return false;
+            }()) autoConnectMenuActions.last()->setChecked(true);
+        else autoConnectMenuActions.last()->setChecked(false);
+        connect(autoConnectMenuActions.last(), &QAction::triggered, this, [this, i](){
+            if(!this->connectAutomatically){
+                connectAutomatically = true;
+                this->savedDeviceAddress = ui->deviceComboBox->itemData(i).value<QBluetoothDeviceInfo>().address();
+            }
+            else connectAutomatically = false;
+            this->updateTrayContext();
+        });
+        ui->menuConnectOnLaunch->addAction(autoConnectMenuActions.last());
+    }
+}
+
 //exit the application
 void PhoneAudioLink::exitApp() {
     saveInitData();
@@ -336,13 +423,7 @@ void PhoneAudioLink::closeEvent(QCloseEvent *event) {
 void PhoneAudioLink::playPause() {
     ui->playPause->toggleState();
 //TODO: change this to toggled so I know if we're paused or playing
-    // //delegate the play/pause command to A2DPStreamer.
-    // if (a2dpStreamer)
-    //     a2dpStreamer->playPause();
 
-    // // Delegate the play/pause command to the audio controller
-    // if (audioController)
-    //     audioController->playPause();
 
     // Send play/pause command via A2DP sink
     if (audioSink)
@@ -374,20 +455,6 @@ void PhoneAudioLink::onA2DPDeviceDiscovered(const QString &deviceId, const QStri
 
     // Store the Windows device ID
     deviceIdMap[deviceName] = deviceId;
-
-    // // Check if this device is already in the combo box
-    // bool found = false;
-    // for (int i = 0; i < ui->deviceComboBox->count(); ++i) {
-    //     if (ui->deviceComboBox->itemText(i).contains(deviceName)) {
-    //         found = true;
-    //         break;
-    //     }
-    // }
-
-    // // If not found, add it
-    // if (!found) {
-    //     ui->deviceComboBox->addItem(deviceName + " [A2DP]");
-    // }
 }
 
 void PhoneAudioLink::onA2DPDiscoveryCompleted() {
@@ -458,6 +525,19 @@ void PhoneAudioLink::connectSelectedDevice() {
 
         // Enable the A2DP sink for this device
         audioSink->enableSink(windowsDeviceId);
+
+        // wait a bit, then update the connected device
+        QTimer::singleShot(3000, this, [this, deviceName](){
+            if(ui->dcLabel->text() == "Connected")
+                this->connectedDevice = deviceName;
+            else //wait another 3 seconds if not connected yet
+                QTimer::singleShot(3000, this, [this, deviceName](){
+                    if(ui->dcLabel->text() == "Connected") //if still not connected, then it will fail out before this happens
+                        this->connectedDevice = deviceName;
+                    this->updateTrayContext();
+                });
+            this->updateTrayContext();
+        });
     } else {
         qWarning() << "Device not found in A2DP device map:" << deviceName;
         QMessageBox::warning(this, tr("Connection Error"),
@@ -465,43 +545,9 @@ void PhoneAudioLink::connectSelectedDevice() {
     }
 
     updateTrayContext();
-
-    // // get the device info from the ComboBox
-    // auto device = ui->deviceComboBox->currentData().value<QBluetoothDeviceInfo>();
-
-    // if (audioSink) {
-    //     // Convert Bluetooth address to device ID format
-    //     // Windows uses a specific format: BluetoothLE#BluetoothLE{MAC}-{SHORT_ID}
-    //     // For A2DP, we need the full device instance ID
-    //     // Qt gives us the MAC address, we need to construct the device ID
-
-    //     QString macAddress = device.address().toString().remove(':').toUpper();
-
-    //     // Windows AudioPlaybackConnection expects a device ID in this format:
-    //     // \\?\BTHENUM#{UUID}_{MAC}
-    //     // However, we can also use the simpler BT address format that AudioPlaybackConnection accepts
-    //     QString deviceId = macAddress;
-
-    //     qDebug() << "Connecting to device:" << device.name();
-    //     qDebug() << "Device ID:" << deviceId;
-
-    //     ui->dcLabel->setText("Connecting...");
-    //     ui->dcLabel->setStyleSheet("QLabel { color : orange; }");
-
-    //     // Enable the A2DP sink for this device
-    //     audioSink->enableSink(deviceId);
-    // }
 }
 
 void PhoneAudioLink::disconnect() {
-    // if (a2dpStreamer) {
-    //     a2dpStreamer->disconnectDevice();
-    // }
-
-    // if (audioController) {
-    //     audioController->disconnectDevice();
-    // }
-
     if (audioSink) {
         audioSink->releaseConnection();
     }
@@ -511,9 +557,10 @@ void PhoneAudioLink::disconnect() {
 
 //triggers when the index of the device combo box is changed
 void PhoneAudioLink::deviceComboChanged(int i){
-    //TODO: implement greying out of buttons, changing color/text of label, etc.
     Q_UNUSED(i);
     //qDebug()<<"changed index: "<<i;
+    updateAutoConnectMenu();
+    updateTrayContext();
 }
 
 //save initialization data
@@ -525,7 +572,7 @@ void PhoneAudioLink::saveInitData() {
     config["maximizeBluetoothCompatability"] = maximizeBluetoothCompatability;
     config["connectAutomatically"] = connectAutomatically;
     config["startMinimized"] = startMinimized;
-    config["device"] = ui->deviceComboBox->currentData().value<QBluetoothDeviceInfo>().address().toString();
+    config["device"] = savedDeviceAddress.toString();//ui->deviceComboBox->currentData().value<QBluetoothDeviceInfo>().address().toString();
 
     //write the file
     QFile file(fileName);
@@ -594,7 +641,7 @@ void PhoneAudioLink::loadInitData(){
         else {
             //alert user of incorrectly formatted configuration
             QMessageBox::critical(this, tr("Error: NoDeviceError"), tr("Failed to parse configuration file \'init.config\'"));
-            return;
+            err = true;
         }
     }
     else{
@@ -614,4 +661,15 @@ QString PhoneAudioLink::stringifyUuids(QList<QBluetoothUuid> l){
         result+=i.toString()+", ";
     }
     return result;
+}
+
+QString PhoneAudioLink::findDeviceName(const QBluetoothAddress& address){
+    for (const QBluetoothDeviceInfo &info : discoveredDevices) {
+        if (info.address() == address) {
+            return info.name();
+        }
+    }
+
+    // Not found
+    return QString();
 }
