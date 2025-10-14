@@ -2,6 +2,7 @@
 #include "ui_phoneaudiolink.h"
 
 #include <QRegularExpression>
+#include <QTimer>
 
 PhoneAudioLink::PhoneAudioLink(QWidget *parent)
     : QMainWindow(parent)
@@ -68,7 +69,7 @@ PhoneAudioLink::PhoneAudioLink(QWidget *parent)
         // Reset notification flag so it shows again on next connection
         connectionNotificationShown = false;
 
-        ui->dcLabel->setText("Disconnected");
+        ui->dcLabel->setText("Disconnected!");
         ui->dcLabel->setStyleSheet("QLabel { color : red; }");
         ui->connect->setEnabled(true);
         ui->disconnect->setEnabled(false);
@@ -117,20 +118,7 @@ PhoneAudioLink::PhoneAudioLink(QWidget *parent)
 
     //create the tray context menu
     trayMenu = new QMenu(this);
-    QAction *restoreAction = new QAction("Show", this);
-    QAction *quitAction = new QAction("Exit", this);
-
-    //connect the tray context menu buttons to their respective actions
-    connect(restoreAction, &QAction::triggered, this, &PhoneAudioLink::showFromTray);
-    connect(quitAction, &QAction::triggered, this, &PhoneAudioLink::exitApp);
-
-    //add the actions
-    trayMenu->addAction(restoreAction);
-    trayMenu->addAction(quitAction);
-
-    //configure and show the tray icon
-    trayIcon->setContextMenu(trayMenu);
-    trayIcon->show();
+    QTimer::singleShot(2000, this, &PhoneAudioLink::updateTrayContext);
 
     //connect tray icon clicked signal to showFromTray
     connect(trayIcon, &QSystemTrayIcon::activated, this, [this](QSystemTrayIcon::ActivationReason r){
@@ -235,16 +223,101 @@ void PhoneAudioLink::changeEvent(QEvent *event) {
     if (event->type() == QEvent::WindowStateChange) {
         if (isMinimized()) {
             saveInitData();
-            hide();  //hide window if minimized
+            QTimer::singleShot(0, this, &PhoneAudioLink::hide); // hide after minimize animation
         }
     }
     QMainWindow::changeEvent(event); //call the super method
 }
 
+void PhoneAudioLink::showEvent(QShowEvent *event) {
+    QMainWindow::showEvent(event);
+    windowShown = true;
+    updateTrayContext();
+}
+
+void PhoneAudioLink::hideEvent(QHideEvent *event) {
+    QMainWindow::hideEvent(event);
+    windowShown = false;
+    updateTrayContext();
+}
+
 //show the window from tray
 void PhoneAudioLink::showFromTray() {
+    // show();
+    // setWindowState((windowState() & ~Qt::WindowMinimized) | Qt::WindowActive);
+    // raise();
     showNormal();
+    raise();
     activateWindow();
+    // activateWindow();
+
+}
+
+void PhoneAudioLink::updateTrayContext(){
+    trayMenu->clear();
+
+    QMenu *devicesMenu = new QMenu("Connect");
+    for (int i = 0; i < ui->deviceComboBox->count(); i++) {
+        trayDeviceActions.append(new QAction(ui->deviceComboBox->itemText(i)));
+        trayDeviceActions.last()->setCheckable(true);
+        connect(trayDeviceActions.last(), &QAction::triggered, this, [this, i](){
+            ui->deviceComboBox->setCurrentIndex(i);
+            connectSelectedDevice();
+        });
+        devicesMenu->addAction(trayDeviceActions.last());
+    }
+
+    QAction *disconnectAction = new QAction("Disconnect", this);
+    disconnectAction->setCheckable(false);
+    if(ui->dcLabel->text() == "Disconnected!") disconnectAction->setDisabled(true);
+    else disconnectAction->setDisabled(false);
+
+    QMenu *settingsMenu = new QMenu("Settings");
+
+    QAction *startMinimized = new QAction("Start Minimized", this);
+    QAction *autoConnect = new QAction("Connect on Launch", this);
+    QAction *autoStart = new QAction("Start on Login", this);
+
+    startMinimized->setCheckable(true);
+    autoConnect->setCheckable(true);
+    autoStart->setCheckable(true);// TODO: signal/slot sync with menu bar settings
+
+    settingsMenu->addAction(startMinimized);
+    settingsMenu->addAction(autoConnect);
+    settingsMenu->addAction(autoStart);
+
+    QAction *restoreAction = new QAction("Show", this);
+    if(windowShown) restoreAction->setDisabled(true);
+    else restoreAction->setDisabled(false);
+
+    QAction *quitAction = new QAction("Exit", this);
+
+    quitAction->setCheckable(false);
+
+    //connect the tray context menu buttons to their respective actions
+    connect(startMinimized, &QAction::triggered, ui->startMinimizedAction, &QAction::trigger);
+    connect(autoConnect, &QAction::triggered, ui->connectStartupAction, &QAction::trigger);
+    connect(disconnectAction, &QAction::triggered, ui->disconnect, &QPushButton::click);
+    connect(autoStart, &QAction::triggered, ui->startOnLoginAction, &QAction::trigger);
+    connect(restoreAction, &QAction::triggered, this, &PhoneAudioLink::showFromTray);
+    connect(quitAction, &QAction::triggered, this, &PhoneAudioLink::exitApp);
+
+    //add the actions
+    trayMenu->addMenu(devicesMenu);
+    trayMenu->addSeparator();
+    trayMenu->addAction(disconnectAction);
+    trayMenu->addSeparator();
+    // trayMenu->addAction(startMinimized);
+    // trayMenu->addAction(autoConnect);
+    // trayMenu->addAction(autoStart);
+    trayMenu->addMenu(settingsMenu);
+    trayMenu->addSeparator();
+    trayMenu->addAction(restoreAction);
+    trayMenu->addAction(quitAction);
+
+    //configure and show the tray icon
+    trayIcon->setContextMenu(trayMenu);
+    trayIcon->show();
 }
 
 //exit the application
@@ -291,6 +364,9 @@ void PhoneAudioLink::startDiscovery() {
     if (audioSink) {
         audioSink->startDeviceDiscovery();
     }
+
+    // Update context menu after giving time for bluetooth discovery
+    QTimer::singleShot(3000, this, &PhoneAudioLink::updateTrayContext);
 }
 
 void PhoneAudioLink::onA2DPDeviceDiscovered(const QString &deviceId, const QString &deviceName) {
@@ -388,6 +464,8 @@ void PhoneAudioLink::connectSelectedDevice() {
                              tr("Device not found. Please make sure the device supports A2DP and try refreshing the device list."));
     }
 
+    updateTrayContext();
+
     // // get the device info from the ComboBox
     // auto device = ui->deviceComboBox->currentData().value<QBluetoothDeviceInfo>();
 
@@ -427,6 +505,8 @@ void PhoneAudioLink::disconnect() {
     if (audioSink) {
         audioSink->releaseConnection();
     }
+
+    updateTrayContext();
 }
 
 //triggers when the index of the device combo box is changed
@@ -457,6 +537,8 @@ void PhoneAudioLink::saveInitData() {
         //alert the user of errors
         QMessageBox::critical(this, tr("Error"), tr("Failed to save initialization configuration file."));
     }
+
+    updateTrayContext();
 
 }
 

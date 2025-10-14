@@ -37,6 +37,8 @@ public:
 protected:
     void closeEvent(QCloseEvent *event) override; //triggers when the app is closed
     void changeEvent(QEvent *event) override; //triggers when the app is minimized
+    void showEvent(QShowEvent *event) override;
+    void hideEvent(QHideEvent *event) override;
 
 private slots:
     void playPause();//is triggered when the play/pause button is pressed
@@ -51,6 +53,7 @@ private slots:
     void saveInitData();//saves the json initialization configuration
     void loadInitData();//loads the json initialization configuration
     void showFromTray();//show the app from tray
+    void updateTrayContext();
     void exitApp();//saves init data, then exits the app
 
 private:
@@ -66,11 +69,12 @@ private:
 
     BluetoothA2DPSink *audioSink;
     QList<QBluetoothDeviceInfo> discoveredDevices; //list of discovered devices
+    QList<QAction*> trayDeviceActions;
 
     // Map device names to Windows device IDs for A2DP
     QMap<QString, QString> deviceIdMap;
 
-    // Track if we've shown connection notification (prevent duplicates)
-    bool connectionNotificationShown;
+    // Track if we've shown connection notification (prevent duplicates), and whether or not the window is visible
+    bool connectionNotificationShown, windowShown;
 };
 #endif // PHONEAUDIOLINK_H
