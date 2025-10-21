@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package>
+    <DisplayName>Main Program</DisplayName>
+    <Description>Installs Phone Audio Link.</Description>
+    <Version>1.1</Version>
+    <ReleaseDate>2025-10-14</ReleaseDate>
+    <Default>true</Default>
+    <UserInterfaces>
+      <UserInterface>createdesktopshortcutform.ui</UserInterface>
+    </UserInterfaces>
+    <Script>installscript.qs</Script>
+</Package>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>CreateDesktopShortcutForm</class>
+ <widget class="QWidget" name="CreateDesktopShortcutForm">
+  <layout class="QVBoxLayout">
+   <item>
+    <widget class="QCheckBox" name="createDesktopShortcutCheckBox">
+     <property name="text">
+      <string>Create Desktop Shortcut</string>
+     </property>
+     <property name="checked">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+</ui>
