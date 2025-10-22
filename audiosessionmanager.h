@@ -16,6 +16,7 @@ public:
     ~AudioSessionManager();
 
     bool setSessionProperties(const QString &displayName, const QString &iconPath);
+    void cleanup();
 
 private:
     bool findPhoneAudioSession();

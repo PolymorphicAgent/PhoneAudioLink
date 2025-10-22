@@ -7,18 +7,30 @@
 AudioSessionManager::AudioSessionManager(QObject *parent)
     : QObject(parent), m_sessionManager(nullptr), m_sessionControl(nullptr)
 {
-    CoInitialize(nullptr);
+    // CoInitialize(nullptr);
+    // Initialize COM for this thread with apartment threading
+    HRESULT hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+    if (FAILED(hr) && hr != RPC_E_CHANGED_MODE) {
+        qWarning() << "Failed to initialize COM:" << hr;
+    }
 }
 
 AudioSessionManager::~AudioSessionManager()
 {
+    cleanup();
+    CoUninitialize();
+}
+
+void AudioSessionManager::cleanup()
+{
     if (m_sessionControl) {
         m_sessionControl->Release();
+        m_sessionControl = nullptr;
     }
     if (m_sessionManager) {
         m_sessionManager->Release();
+        m_sessionManager = nullptr;
     }
-    CoUninitialize();
 }
 
 bool AudioSessionManager::findPhoneAudioSession()
