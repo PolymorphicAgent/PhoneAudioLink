@@ -381,8 +381,15 @@ void PhoneAudioLink::updateTrayContext(){
     trayMenu->addAction(restoreAction);
     trayMenu->addAction(quitAction);
 
-    //configure and show the tray icon
+    //configure the tray icon
     trayIcon->setContextMenu(trayMenu);
+
+    // Update tray tooltip
+    if(ui->dcLabel->text() == "Disconnected!")  trayIcon->setToolTip("Disconnected!");
+    else if(ui->dcLabel->text() == "Connected") trayIcon->setToolTip("Connected to:\n"+connectedDevice);
+    else trayIcon->setToolTip("Connecting...");
+
+    // show the tray icon
     trayIcon->show();
 }
 
@@ -544,6 +551,8 @@ void PhoneAudioLink::appendDevice(const QBluetoothDeviceInfo &device) {
 //connect to the device in the combo box
 void PhoneAudioLink::connectSelectedDevice() {
 
+    updateTrayContext();
+
     QString selectedText = ui->deviceComboBox->currentText();
 
     // Remove any tags like [A2DP], [Phone Device], etc.
@@ -560,6 +569,8 @@ void PhoneAudioLink::connectSelectedDevice() {
 
         ui->dcLabel->setText("Connecting...");
         ui->dcLabel->setStyleSheet("QLabel { color : orange; }");
+
+        updateTrayContext();
 
         // Enable the A2DP sink for this device
         audioSink->enableSink(windowsDeviceId);
