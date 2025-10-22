@@ -11,16 +11,16 @@ RC_ICONS = icon.ico
 # Windows-specific libraries
 win32 {
     QMAKE_CXXFLAGS += /await:strict /std:c++20 # Enable coroutines
-    LIBS += -lUser32
+    LIBS += -lUser32 -lOle32
     LIBS += -lwindowsapp -lruntimeobject  # WinRT libs
     DEFINES += WINVER=0x0A00 _WIN32_WINNT=0x0A00  # Win10+
 
     # Require Windows 10 2004 minimum
     DEFINES += NTDDI_VERSION=NTDDI_WIN10_CO
 
-    message("Configuring for Windows with A2DP Sink support")
-    message("Requires: Windows 10 version 2004 (May 2020) or later")
-    message("Requires: MSVC compiler (MinGW not supported)")
+    # message("Configuring for Windows with A2DP Sink support")
+    # message("Requires: Windows 10 version 2004 (May 2020) or later")
+    # message("Requires: MSVC compiler (MinGW not supported)")
 }
 
 # Program Version
@@ -29,6 +29,7 @@ DEFINES += GLOBAL_MINOR_PROGRAM_VERSION_SIZE=1
 
 CONFIG(debug, debug|release) {
     DEFINES += DEBUG_BUILD
+    CONFIG += console
 } else {
     DEFINES += RELEASE_BUILD
 }
@@ -37,6 +38,7 @@ CONFIG(debug, debug|release) {
 SOURCES += \
     # a2dpstreamer.cpp \
     animatedbutton.cpp \
+    audiosessionmanager.cpp \
     bluetootha2dpsink.cpp \
     # bluetoothaudiocontroller.cpp \
     # bluetoothaudiocontrollerstub.cpp \
@@ -48,6 +50,7 @@ SOURCES += \
 HEADERS += \
     # a2dpstreamer.h \
     animatedbutton.h \
+    audiosessionmanager.h \
     bluetootha2dpsink.h \
     # bluetoothaudiocontroller.h \
     # bluetoothaudiocontrollerstub.h \
