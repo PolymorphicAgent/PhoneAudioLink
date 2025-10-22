@@ -7,7 +7,7 @@
 PhoneAudioLink::PhoneAudioLink(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::PhoneAudioLink)
-    , audioSessionManager(new AudioSessionManager(this))
+    , audioSessionManager(nullptr)
     , audioSink(nullptr)
 {
     ui->setupUi(this);
@@ -234,6 +234,8 @@ PhoneAudioLink::~PhoneAudioLink() {
     // Stop device watchers
     if (audioSink) {
         audioSink->stopDeviceDiscovery();
+        audioSink->deleteLater();
+        audioSink = nullptr;
     }
     if(discoveryAgent){
         discoveryAgent->stop();//stop bluetooth discovery
@@ -411,8 +413,43 @@ void PhoneAudioLink::updateAutoConnectMenu() {
 //exit the application
 void PhoneAudioLink::exitApp() {
     saveInitData();
-    trayIcon->hide();//hide the tray icon
-    QApplication::quit();//call the super method
+
+    // Cleanup audio session manager first (COM cleanup)
+    if (audioSessionManager) {
+        qDebug() << "Cleaning up AudioSessionManager";
+        audioSessionManager->cleanup();
+        audioSessionManager->deleteLater();
+        audioSessionManager = nullptr;
+    }
+
+    disconnect();
+
+    // Stop discovery
+    if (discoveryAgent) {
+        qDebug() << "Stopping discovery agent";
+        discoveryAgent->stop();
+        discoveryAgent->deleteLater();
+        discoveryAgent = nullptr;
+    }
+    if (audioSink) {
+        qDebug() << "Stopping A2DP sink device discovery";
+        audioSink->stopDeviceDiscovery();
+        audioSink->deleteLater();
+        audioSink = nullptr;
+    }
+
+    // hide the tray icon
+    trayIcon->hide();
+
+    // Process pending events before quitting
+    QCoreApplication::processEvents();
+
+    //QApplication::quit();//call the super method
+    // Force quit after a short delay to ensure cleanup completes
+    QTimer::singleShot(1000, []() {
+        qDebug() << "Force quitting application";
+        QCoreApplication::exit(0);
+    });
 }
 
 //handle the close event
@@ -539,6 +576,11 @@ void PhoneAudioLink::connectSelectedDevice() {
                 });
             this->updateTrayContext();
         });
+
+        // Create AudioSessionManager only when we actually need it
+        if (!audioSessionManager) {
+            audioSessionManager = new AudioSessionManager(this);
+        }
 
         // Set custom name and icon in Volume Mixer
         QString exePath = QCoreApplication::applicationFilePath();
