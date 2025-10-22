@@ -435,7 +435,7 @@
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>&amp;Mazimize Bluetooth Compatability</string>
+    <string>&amp;Maximize Bluetooth Compatability</string>
    </property>
    <property name="toolTip">
     <string>Enable if your device isn't showing up.</string>
