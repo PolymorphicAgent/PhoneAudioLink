@@ -1,8 +1,9 @@
 #ifndef PHONEAUDIOLINK_H
 #define PHONEAUDIOLINK_H
 
-#include "startuphelp.h"
+#include "audiosessionmanager.h"
 #include "bluetootha2dpsink.h"
+#include "startuphelp.h"
 
 #include <QBluetoothDeviceDiscoveryAgent>
 #include <QBluetoothLocalDevice>
@@ -61,6 +62,7 @@ private:
     StartupHelp *startupHelp; //declare startup help dialog (instructs user on how to add the program to startup)
     Ui::PhoneAudioLink *ui; //the ui
     QBluetoothDeviceDiscoveryAgent *discoveryAgent; //the discovety agent
+    AudioSessionManager *audioSessionManager; // for setting the app icon and name in windows volume mixer
     QBluetoothAddress savedDeviceAddress; //the address of the device from our json initialization configuration file
     QSystemTrayIcon *trayIcon; //the tray icon
     QMenu *trayMenu; //the tray context menu

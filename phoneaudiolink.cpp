@@ -7,6 +7,7 @@
 PhoneAudioLink::PhoneAudioLink(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::PhoneAudioLink)
+    , audioSessionManager(new AudioSessionManager(this))
     , audioSink(nullptr)
 {
     ui->setupUi(this);
@@ -537,6 +538,23 @@ void PhoneAudioLink::connectSelectedDevice() {
                     this->updateTrayContext();
                 });
             this->updateTrayContext();
+        });
+
+        // Set custom name and icon in Volume Mixer
+        QString exePath = QCoreApplication::applicationFilePath();
+        QString displayName = QString("Phone Audio Link (%1)").arg(ui->deviceComboBox->currentData().value<QBluetoothDeviceInfo>().name());
+
+        // Try to set immediately, then retry after a delay, then retry again
+        QTimer::singleShot(500, this, [this, displayName, exePath]() {
+            audioSessionManager->setSessionProperties(displayName, exePath);
+        });
+
+        QTimer::singleShot(2000, this, [this, displayName, exePath]() {
+            audioSessionManager->setSessionProperties(displayName, exePath);
+        });
+
+        QTimer::singleShot(7000, this, [this, displayName, exePath]() {
+            audioSessionManager->setSessionProperties(displayName, exePath);
         });
     } else {
         qWarning() << "Device not found in A2DP device map:" << deviceName;
