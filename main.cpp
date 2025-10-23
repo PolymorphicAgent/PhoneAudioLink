@@ -8,12 +8,12 @@
 #include <sstream>
 #include <iostream>
 
-QString version(){
-    std::stringstream tmp;
-    tmp<<std::fixed<<std::setprecision(GLOBAL_MINOR_PROGRAM_VERSION_SIZE);
-    tmp<<GLOBAL_PROGRAM_VERSION;
-    return QString::fromStdString(tmp.str());
-}
+#define VERSION_STR() ([]() -> QString { \
+    std::stringstream tmp; \
+    tmp << std::fixed << std::setprecision(GLOBAL_MINOR_PROGRAM_VERSION_SIZE); \
+    tmp << GLOBAL_PROGRAM_VERSION; \
+    return QString::fromStdString(tmp.str()); \
+})()
 
 int main(int argc, char *argv[])
 {
@@ -31,7 +31,12 @@ int main(int argc, char *argv[])
         }
     }
     PhoneAudioLink w;
-    w.setWindowTitle("Phone Audio Link v"+version());
+    w.setWindowTitle("Phone Audio Link v"+VERSION_STR());
+    w.setWindowFlags(Qt::CustomizeWindowHint        |
+                     Qt::WindowTitleHint            |
+                     Qt::WindowMinimizeButtonHint   |
+                     Qt::WindowCloseButtonHint      |
+                     Qt::MSWindowsFixedSizeDialogHint);
     if(!w.getStartMinimized())w.show();
     return a.exec();
 }

@@ -1,8 +1,11 @@
 #ifndef PHONEAUDIOLINK_H
 #define PHONEAUDIOLINK_H
 
+#include "updatenotificationbar.h"
 #include "audiosessionmanager.h"
+#include "releasenotesdialog.h"
 #include "bluetootha2dpsink.h"
+#include "updatechecker.h"
 #include "startuphelp.h"
 
 #include <QBluetoothDeviceDiscoveryAgent>
@@ -82,5 +85,17 @@ private:
 
     // Track if we've shown connection notification (prevent duplicates), and whether or not the window is visible
     bool connectionNotificationShown, windowShown;
+
+    // Version checking stuff
+    UpdateChecker *updateChecker;
+    UpdateNotificationBar *updateNotificationBar;
+    QString pendingReleaseNotesUrl;
+    QString pendingVersion;
+    bool manuallyChecked = false;
+
+private slots:
+    void onUpdateAvailable(const QString &newVersion, const QString &releaseNotesUrl);
+    void showReleaseNotes(const QString &releaseNotesUrl);
+    void launchMaintenanceTool();
 };
 #endif // PHONEAUDIOLINK_H

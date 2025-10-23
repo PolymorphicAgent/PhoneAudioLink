@@ -2,15 +2,66 @@
 #include "ui_phoneaudiolink.h"
 
 #include <QRegularExpression>
+#include <QProcess>
 #include <QTimer>
+
+#include <iomanip>
+#include <sstream>
+#include <iostream>
+
+#define VERSION_STR() ([]() -> QString { \
+    std::stringstream tmp; \
+    tmp << std::fixed << std::setprecision(GLOBAL_MINOR_PROGRAM_VERSION_SIZE); \
+    tmp << GLOBAL_PROGRAM_VERSION; \
+    return QString::fromStdString(tmp.str()); \
+})()
 
 PhoneAudioLink::PhoneAudioLink(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::PhoneAudioLink)
     , audioSessionManager(nullptr)
     , audioSink(nullptr)
+    , updateChecker(new UpdateChecker(this))
 {
     ui->setupUi(this);
+
+    // Create update notification bar and add to bottom of window
+    updateNotificationBar = new UpdateNotificationBar(this);
+
+    // Add notification bar to the main window layout
+    ui->updateBarLayout->addWidget(updateNotificationBar);
+
+    // Connect update checker signals
+    connect(updateChecker, &UpdateChecker::updateAvailable,
+            this, &PhoneAudioLink::onUpdateAvailable);
+    connect(updateChecker, &UpdateChecker::checkFailed, this, [](const QString &error) {
+            qDebug() << "Update check failed:" << error;
+    });
+    connect(updateChecker, &UpdateChecker::noUpdateAvailable, this, [this](){
+        if(this->manuallyChecked)
+            QMessageBox::information(this, "Updater", "No update available!");
+    });
+
+    // Connect notification bar signals
+    connect(updateNotificationBar, &UpdateNotificationBar::seeDetailsClicked,
+            this, &PhoneAudioLink::showReleaseNotes);
+    connect(updateNotificationBar, &UpdateNotificationBar::updateClicked,
+            this, &PhoneAudioLink::launchMaintenanceTool);
+    connect(updateNotificationBar, &UpdateNotificationBar::closeClicked,
+            updateNotificationBar, &UpdateNotificationBar::hideBar);
+    connect(updateNotificationBar, &UpdateNotificationBar::closeClicked,
+            this, [this](){this->resize(this->width(), 316);});
+
+    // Check for updates after a short delay (let the UI load first)
+    QTimer::singleShot(2000, this, [this]() {
+        updateChecker->checkForUpdates(VERSION_STR());
+    });
+
+    connect(ui->actionCheckUpdate, &QAction::triggered, this, [this](){
+        updateChecker->checkForUpdates(VERSION_STR());
+        manuallyChecked = true;
+    });
+
     ui->dcLabel->setStyleSheet("QLabel { color : red; }");
     ui->menuAdvanced->setToolTipsVisible(true);
 
@@ -743,4 +794,47 @@ QString PhoneAudioLink::findDeviceName(const QBluetoothAddress& address){
 
     // Not found
     return QString();
+}
+
+void PhoneAudioLink::onUpdateAvailable(const QString &newVersion, const QString &releaseNotesUrl)
+{
+    qDebug() << "Update available:" << newVersion;
+    pendingVersion = newVersion;
+    pendingReleaseNotesUrl = releaseNotesUrl;
+    updateNotificationBar->showUpdate(newVersion, releaseNotesUrl);
+
+    // Resize the main window to accomodate the update bar
+    this->resize(this->width(), 351);
+}
+
+void PhoneAudioLink::showReleaseNotes(const QString &releaseNotesUrl)
+{
+    ReleaseNotesDialog *dialog = new ReleaseNotesDialog(pendingVersion, releaseNotesUrl, this);
+    connect(dialog, &ReleaseNotesDialog::updateRequested,
+            this, &PhoneAudioLink::launchMaintenanceTool);
+    dialog->exec();
+    dialog->deleteLater();
+}
+
+void PhoneAudioLink::launchMaintenanceTool()
+{
+    QString maintenanceToolPath = QCoreApplication::applicationDirPath() + "/maintenancetool.exe";
+
+    qDebug() << "Launching maintenance tool:" << maintenanceToolPath;
+
+    if (!QFile::exists(maintenanceToolPath)) {
+        QMessageBox::warning(this, "Update Error",
+                             "Maintenance tool not found. Please reinstall the application.");
+        return;
+    }
+
+    // Warn user
+    QMessageBox::information(this, "Update",
+                             "The maintenance tool will now update PhoneAudioLink.\n"
+                             "The application will now save config and close.");
+
+    // Launch maintenance tool in update mode
+    QProcess::startDetached(maintenanceToolPath, QStringList() << "--updater");
+
+    exitApp();
 }

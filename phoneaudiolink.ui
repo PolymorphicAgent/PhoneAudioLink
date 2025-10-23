@@ -2,6 +2,9 @@
 <ui version="4.0">
  <class>PhoneAudioLink</class>
  <widget class="QMainWindow" name="PhoneAudioLink">
+  <property name="windowModality">
+   <enum>Qt::WindowModality::NonModal</enum>
+  </property>
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -19,8 +22,11 @@
   <property name="maximumSize">
    <size>
     <width>444</width>
-    <height>316</height>
+    <height>351</height>
    </size>
+  </property>
+  <property name="acceptDrops">
+   <bool>false</bool>
   </property>
   <property name="windowTitle">
    <string>PhoneAudioLink</string>
@@ -331,6 +337,17 @@
      <set>Qt::AlignmentFlag::AlignCenter</set>
     </property>
    </widget>
+   <widget class="QWidget" name="verticalLayoutWidget">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>270</y>
+      <width>421</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <layout class="QVBoxLayout" name="updateBarLayout"/>
+   </widget>
    <zorder>frame_3</zorder>
    <zorder>frame_2</zorder>
    <zorder>frame</zorder>
@@ -338,6 +355,7 @@
    <zorder>connect</zorder>
    <zorder>label_2</zorder>
    <zorder>label_3</zorder>
+   <zorder>verticalLayoutWidget</zorder>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
@@ -382,12 +400,12 @@
      <string>&amp;Advanced</string>
     </property>
     <addaction name="compatAction"/>
+    <addaction name="actionCheckUpdate"/>
     <addaction name="debug"/>
    </widget>
    <addaction name="menuStartup"/>
    <addaction name="menuAdvanced"/>
   </widget>
-  <widget class="QStatusBar" name="statusbar"/>
   <action name="startMinimizedAction">
    <property name="checkable">
     <bool>true</bool>
@@ -457,6 +475,11 @@
    </property>
    <property name="text">
     <string>Placeholder!</string>
+   </property>
+  </action>
+  <action name="actionCheckUpdate">
+   <property name="text">
+    <string>Check For Updates</string>
    </property>
   </action>
  </widget>

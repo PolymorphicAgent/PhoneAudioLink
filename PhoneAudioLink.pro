@@ -1,4 +1,4 @@
-QT       += core gui bluetooth multimedia
+QT       += core gui bluetooth multimedia network
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -17,14 +17,10 @@ win32 {
 
     # Require Windows 10 2004 minimum
     DEFINES += NTDDI_VERSION=NTDDI_WIN10_CO
-
-    # message("Configuring for Windows with A2DP Sink support")
-    # message("Requires: Windows 10 version 2004 (May 2020) or later")
-    # message("Requires: MSVC compiler (MinGW not supported)")
 }
 
 # Program Version
-DEFINES += GLOBAL_PROGRAM_VERSION="1.1"
+DEFINES += GLOBAL_PROGRAM_VERSION="1.2"
 DEFINES += GLOBAL_MINOR_PROGRAM_VERSION_SIZE=1
 
 CONFIG(debug, debug|release) {
@@ -36,27 +32,25 @@ CONFIG(debug, debug|release) {
 
 
 SOURCES += \
-    # a2dpstreamer.cpp \
     animatedbutton.cpp \
     audiosessionmanager.cpp \
     bluetootha2dpsink.cpp \
-    # bluetoothaudiocontroller.cpp \
-    # bluetoothaudiocontrollerstub.cpp \
-    # bluetoothaudiocontrollerwin.cpp \
     main.cpp \
     phoneaudiolink.cpp \
-    startuphelp.cpp
+    releasenotesdialog.cpp \
+    startuphelp.cpp \
+    updatechecker.cpp \
+    updatenotificationbar.cpp
 
 HEADERS += \
-    # a2dpstreamer.h \
     animatedbutton.h \
     audiosessionmanager.h \
     bluetootha2dpsink.h \
-    # bluetoothaudiocontroller.h \
-    # bluetoothaudiocontrollerstub.h \
-    # bluetoothaudiocontrollerwin.h \
     phoneaudiolink.h \
-    startuphelp.h
+    releasenotesdialog.h \
+    startuphelp.h \
+    updatechecker.h \
+    updatenotificationbar.h
 
 FORMS += \
     phoneaudiolink.ui
