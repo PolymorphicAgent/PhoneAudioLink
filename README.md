@@ -13,7 +13,7 @@ PhoneAudioLink transforms your Windows PC into a Bluetooth audio receiver (A2DP 
 ## ✨ Features
 
 - 🎵 **Stream Audio** - Play audio from your phone through your PC speakers
-- 🔵 **Bluetooth A2DP Sink** - Leverages Windows 10's native A2DP support
+- 🔵 **Bluetooth A2DP Sink** - Leverages Windows 11's native A2DP support
 - 🎨 **Modern UI** - Clean, intuitive interface with animated buttons
 - 🔔 **System Tray Integration** - Minimize to tray and control from notification area
 - 💾 **Auto-Reconnect** - Remembers your device and reconnects automatically
@@ -178,7 +178,6 @@ This implementation uses Windows-specific APIs (WinRT) and cannot be ported to L
 ### Planned Features
 
 #### Short-term (Next Release)
-- [ ] **Volume Control** - Adjust volume directly from PC
 - [ ] **Connection History** - Quick access to recently connected devices
 - [ ] **Keyboard Shortcuts** - Global hotkeys for common actions
 - [ ] **Notification Customization** - Choose which notifications to show
@@ -189,7 +188,6 @@ This implementation uses Windows-specific APIs (WinRT) and cannot be ported to L
 - [ ] **Album Artwork** - Display album cover in UI
 - [ ] **Playback Timeline** - Show progress bar and time remaining
 - [ ] **Battery Level Indicator** - Display phone battery status
-- [ ] **Multiple Device Support** - Switch between multiple paired devices
 - [ ] **Audio Recording** - Capture streaming audio to file
 - [ ] **Auto-reconnect on Wake** - Reconnect when PC wakes from sleep
 
@@ -224,7 +222,7 @@ Have a feature idea? [Open an issue](https://github.com/PolymorphicAgent/PhoneAu
 
 ### Audio choppy or cutting out
 - **Cause:** Bluetooth interference or distance
-- **Fix:** Move phone closer to PC, remove obstacles, disable other Bluetooth devices
+- **Fix:** Restart the app, move phone closer to PC, remove obstacles, disable other Bluetooth devices
 
 ### Can't build project
 - **Cause:** Wrong compiler or missing dependencies
