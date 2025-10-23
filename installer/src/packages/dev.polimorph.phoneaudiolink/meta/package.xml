@@ -2,8 +2,8 @@
 <Package>
     <DisplayName>Main Program</DisplayName>
     <Description>Installs Phone Audio Link.</Description>
-    <Version>1.1</Version>
-    <ReleaseDate>2025-10-14</ReleaseDate>
+    <Version>1.2</Version>
+    <ReleaseDate>2025-10-23</ReleaseDate>
     <Default>true</Default>
     <UserInterfaces>
       <UserInterface>createdesktopshortcutform.ui</UserInterface>

@@ -6,15 +6,15 @@
   <Name>dev.polimorph.phoneaudiolink</Name>
   <DisplayName>Main Program</DisplayName>
   <Description>Installs Phone Audio Link.</Description>
-  <Version>1.1</Version>
-  <ReleaseDate>2025-10-14</ReleaseDate>
+  <Version>1.2</Version>
+  <ReleaseDate>2025-10-23</ReleaseDate>
   <Default>true</Default>
   <Script>installscript.qs</Script>
-  <UpdateFile CompressedSize="19825019" OS="Any" UncompressedSize="70468378"/>
+  <UpdateFile CompressedSize="19810644" OS="Any" UncompressedSize="70336734"/>
   <DownloadableArchives>generic.7z,iconengines.7z,imageformats.7z,networkinformation.7z,platforms.7z,styles.7z,tls.7z,translations.7z,content.7z</DownloadableArchives>
   <UserInterfaces>createdesktopshortcutform.ui</UserInterfaces>
-  <SHA1>fd30635956cc5f41e0292d936c2793b5ff5b08eb</SHA1>
+  <SHA1>7cdbd244a29a60b8444f2d65017b52c538f91fc2</SHA1>
  </PackageUpdate>
- <SHA1>439a611a46afa4cadb6a3ee2e4c0bad1a917d499</SHA1>
- <MetadataName>2025-10-21-1618_meta.7z</MetadataName>
+ <SHA1>d77cbf04ed3dfcd5afe37fe20d71d46edd586966</SHA1>
+ <MetadataName>2025-10-23-1128_meta.7z</MetadataName>
 </Updates>

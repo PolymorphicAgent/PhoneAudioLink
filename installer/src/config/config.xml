@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Installer>
     <Name>Phone Audio Link</Name>
-    <Version>1.1</Version>
+    <Version>1.2</Version>
     <Title> Phone Audio Link Installer</Title>
     <Publisher>Polymorphic Agent</Publisher>
     <TargetDir>@HomeDir@/AppData/Roaming/PolymorphicAgent/PhoneAudioLink</TargetDir>
